@@ -225,7 +225,7 @@ function switchTab(tabName) {
 const MODEL_META = {
     xlmr:      { name: 'XLM-R',       sub: 'xlm-roberta · fine-tuned',   color: '#0d9488' },
     embedding: { name: 'Embedding',   sub: 'E5/BGE + classifier head',   color: '#7c3aed' },
-    baseline:  { name: 'Baseline',    sub: 'TF-IDF + XGBoost',           color: '#64748b' },
+    baseline:  { name: 'Baseline',    sub: 'TF-IDF + Classification Model',           color: '#64748b' },
 };
 let evalFocusKey = null;
 let evalModelsData = null;

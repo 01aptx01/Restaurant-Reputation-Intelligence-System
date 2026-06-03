@@ -49,6 +49,7 @@ TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "tfidf_vectorizer.joblib") #
 CHAR_TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "char_tfidf_vectorizer.joblib") # พาธจัดเก็บ Char-level TF-IDF
 LSA_TRANSFORMER_PATH = _p("artifacts", "baseline", "lsa_transformer.joblib") # พาธจัดเก็บตัวลดมิติข้อมูล TruncatedSVD (LSA)
 XGB_MODEL_PATH = _p("artifacts", "baseline", "xgb_model.json")            # พาธจัดเก็บไฟล์โครงสร้างและน้ำหนักของ XGBoost
+SKLEARN_MODEL_PATH = _p("artifacts", "baseline", "sklearn_model.joblib")  # พาธจัดเก็บไฟล์โครงสร้างของ LinearSVC/sklearn
 BASELINE_META_PATH = _p("artifacts", "baseline", "baseline_meta.json")    # ไฟล์ Metadata บันทึกคุณสมบัติการเทรนของ Baseline
 
 # ==============================================================================
@@ -90,7 +91,6 @@ def _cuda_runtime_ok() -> bool:
         except Exception:
             return False
     major, _ = torch.cuda.get_device_capability(0)
-    # Blackwell (sm_120) needs PyTorch cu128 wheels; cu118 reports is_available but kernels fail.
     if major >= 12 and "+cu128" not in torch.__version__:
         return False
     try:
@@ -158,7 +158,7 @@ BASELINE_KFOLD = 5                         # จำนวนรอบพับ�
 # ==============================================================================
 AUGMENT_ENABLED = True                     # เปิด/ปิดระบบขยายข้อมูลอัตโนมัติสำหรับคลาสดาวน้อย
 AUGMENT_TARGET_STARS = (1, 2, 3)           # คลาสดาวเป้าหมายที่จะทำ augmentation (ดาวที่มีข้อมูลน้อย)
-AUGMENT_TARGET_COUNT = 800                 # จำนวนตัวอย่างเป้าหมายต่อคลาสหลัง augmentation (ถมให้ถึงหลักพัน)
+AUGMENT_TARGET_COUNT = 1400                 # จำนวนตัวอย่างเป้าหมายต่อคลาสหลัง augmentation (ถมให้ถึงหลักพัน)
 AUGMENT_SYNONYM_PROB = 0.3                 # ความน่าจะเป็นในการสุ่มแทนที่คำด้วยคำพ้องความหมาย (30%)
 AUGMENT_SHUFFLE_PROB = 0.2                 # ความน่าจะเป็นในการสลับลำดับคำในประโยค (20%)
 AUGMENT_RANDOM_STATE = 42                  # ค่าความสุ่มคงที่สำหรับ reproducibility ของ augmentation

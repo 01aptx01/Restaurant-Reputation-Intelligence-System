@@ -50,8 +50,12 @@ def _baseline_meta() -> dict:
 
 def _baseline_artifact_paths() -> list[str]:
     """คำนวณตรวจสอบรายชื่อพาธไฟล์เวตและตัวสกัดฟีเจอร์ของ Baseline ที่ต้องใช้สำหรับการรันทำนายจริง"""
-    paths = [config.TFIDF_VECTORIZER_PATH, config.XGB_MODEL_PATH] # พาธ Word TF-IDF และโมเดล XGBoost หลัก
     meta = _baseline_meta() # ดึง Metadata
+    best_model_type = meta.get("best_model_type", "xgboost")
+    model_path = getattr(config, "SKLEARN_MODEL_PATH", os.path.join(config.BASELINE_ARTIFACTS_DIR, "sklearn_model.joblib")) if best_model_type != "xgboost" else config.XGB_MODEL_PATH
+    
+    paths = [config.TFIDF_VECTORIZER_PATH, model_path] # พาธ Word TF-IDF และโมเดลที่ชนะ
+
     # แนบตรวจเช็คพาสไฟล์ SVD (LSA) หากมีการเปิดใช้
     if meta.get("use_lsa", _baseline_uses_lsa()):
         paths.append(config.LSA_TRANSFORMER_PATH)
@@ -436,7 +440,7 @@ def main() -> None:
 
         # 1.2 รันการทำนายผลลัพธ์ผ่านสคริปต์ทำนายของ XGBoost
         expected, probs = predict_baseline_with_probs(df_baseline)
-        metrics = evaluate_model("Baseline (TF-IDF + XGBoost)", df_baseline, expected)
+        metrics = evaluate_model("Baseline (TF-IDF + Classification Model)", df_baseline, expected)
         results["models"]["baseline"] = metrics # เก็บค่าสถิติ
 
         if args.save_predictions:

@@ -15,7 +15,7 @@ DEFAULT_OUTPUT = config.DEFAULT_EVAL_VIZ
 STAR_LABELS = ["1", "2", "3", "4", "5"]
 
 MODEL_LABELS = {
-    "baseline": "Baseline (TF-IDF + XGBoost)",
+    "baseline": "Baseline (TF-IDF + Classification Model)",
     "xlmr": "XLM-R",
     "embedding": "Embedding (BGE-M3)",
     "ensemble": "Hybrid Ensemble (XLM-R + BGE-M3)",
