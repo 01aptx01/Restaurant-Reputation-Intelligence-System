@@ -20,6 +20,18 @@ Restaurant-Reputation-Intelligence-System/
 └── requirements.txt
 ```
 
+## `docs/`
+
+| ไฟล์ | เนื้อหา |
+|------|---------|
+| [getting-started.md](getting-started.md) | ติดตั้งและรัน pipeline |
+| [directory-guide.md](directory-guide.md) | คู่มือนี้ |
+| [preprocessing/README.md](preprocessing/README.md) | สรุป preprocessing ทุกโมเดล |
+| [preprocessing/baseline.md](preprocessing/baseline.md) | TF-IDF, extra features |
+| [preprocessing/xlmr.md](preprocessing/xlmr.md) | XLM-R tokenization |
+| [preprocessing/embedding.md](preprocessing/embedding.md) | Sentence embedding |
+| [preprocessing/text-normalization.md](preprocessing/text-normalization.md) | ฟังก์ชัน normalize ข้อความ |
+
 ## Scope โมเดล
 
 | กลุ่ม | โมเดล |

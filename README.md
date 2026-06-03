@@ -32,6 +32,10 @@ Web UI เลือกโมเดลที่ **evaluate ได้ MAE ต่�
 
 ดู [docs/directory-guide.md](docs/directory-guide.md)
 
+## Preprocessing
+
+ดู [docs/preprocessing/README.md](docs/preprocessing/README.md) — อธิบายขั้นตอนล้างข้อมูลและแปลงฟีเจอร์ของแต่ละโมเดล
+
 ## Smoke test
 
 ```powershell
