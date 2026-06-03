@@ -1,34 +1,32 @@
 # Experiments (แยกจาก production `outputs/`)
 
-โฟลเดอร์นี้เก็บ **ผลการทดลอง / จูน / EDA** เท่านั้น — ไม่ปนกับ pipeline จริง (`outputs/eval`, `outputs/scores`, `artifacts/`)
+โฟลเดอร์นี้เก็บ **ผลการทดลอง / จูน / EDA** — ไม่ปนกับ pipeline จริง (`outputs/eval`, `artifacts/`)
 
 ## โครงสร้าง
 
 ```
 experiments/
-└── baseline/
-    ├── try_log.md           # บันทึกทุก try + ceiling analysis
-    ├── tune_log.json        # metrics ทุก candidate จาก tune_baseline.py
-    ├── eda_summary.json     # EDA จาก eda_baseline_data.py
-    ├── errors/              # error CSV จากช่วงทดลอง
-    └── eval/                # eval JSON snapshot ระหว่าง sweep
+├── manifests/              # YAML sweep configs
+├── results/{run_id}/       # JSON จาก run_experiments.py
+└── baseline/               # try_log จาก tune_baseline (legacy)
 ```
 
 ## รันทดลอง
 
 ```powershell
-python scripts/eda_baseline_data.py
+python scripts/run_experiments.py experiments/manifests/baseline_sweep.yaml
 python scripts/tune_baseline.py --append-try-log
-python scripts/summarize_tune_ceiling.py
+python experiments/xlmr_preprocess_ablation.py --epochs 1
 ```
+
+รายละเอียด: [docs/experiments.md](../docs/experiments.md)
 
 ## Production (คนละโฟลเดอร์)
 
 | งาน | Path |
 |-----|------|
-| โมเดลที่ใช้จริง | `artifacts/baseline/` |
+| โมเดลที่ใช้จริง | `artifacts/baseline/`, `artifacts/xlmr/`, `artifacts/embedding/` |
 | Eval หลัง pipeline | `outputs/eval/eval_report.json` |
-| Score CSV | `outputs/scores/` |
 | Dashboard HTML | `outputs/reports/eval_report_viz.html` |
 
-รายละเอียด config: [src/rris/config.py](../src/rris/config.py) · คู่มือโปรเจกต: [docs/workflow.md](../docs/workflow.md)
+Config: [src/rris/config.py](../src/rris/config.py) · เริ่มต้น: [docs/getting-started.md](../docs/getting-started.md)

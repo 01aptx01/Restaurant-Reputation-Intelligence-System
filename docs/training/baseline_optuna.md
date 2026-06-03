@@ -14,7 +14,8 @@ Artifact บันทึกทับ path เดียวกับ baseline → 
 ```text
 TF-IDF features
   → Optuna TPE (30 trials × 5-fold CV)
-  → เลือก classifier + hyperparams ที่ F1-macro สูงสุด
+  → เลือก classifier + hyperparams ที่ Val MAE ต่ำสุด
+  → fit_vectorizer_and_features (word/char TF-IDF, LSA, extra features ตาม config)
   → เทรนบน train ทั้งหมด → ทดสอบ holdout
   → บันทึก artifact (path เดียวกับ baseline)
 ```
@@ -28,9 +29,10 @@ TF-IDF features
 | Hyperparameter | fixed ใน config | Optuna search |
 | Validation | single val split | **5-fold Stratified CV** |
 | Classifier | เทียบ 4 ตัว fixed params | Optuna เลือก + จูน params |
-| Resampling | undersample/oversample/mock | ไม่มี |
-| Word tokenizer | PyThaiNLP `newmm` | ไม่ใช้ custom tokenizer |
-| Char TF-IDF analyzer | `char_wb` | `char` |
+| Resampling | undersample/oversample/mock | ✓ (เหมือน baseline) |
+| Feature pipeline | `fit_vectorizer_and_features` | ✓ เดียวกัน |
+| Word tokenizer | PyThaiNLP `newmm` | ✓ เดียวกัน |
+| Objective | Val MAE | **CV MAE (minimize)** |
 
 ---
 

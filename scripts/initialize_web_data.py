@@ -9,12 +9,12 @@ from pathlib import Path
 
 import numpy as np
 
-from rris import config, utils
+from rris import config
 from rris.evaluation.runner import resolve_best_model
 from rris.inference.baseline import predict_baseline_with_probs
 from rris.inference.common import get_hex_color
 from rris.inference.embedding import predict_embedding_with_probs
-from rris.inference.prep import prepare_scoring_dataframe
+from rris.inference.prep import prepare_scoring_for_model
 from rris.inference.xlmr import predict_xlmr_with_probs
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -63,15 +63,7 @@ def main():
     if not input_file.exists():
         input_file = Path(config.TEST_PATH)
 
-    if model == "xlmr":
-        norm_fn = utils.xlmr_normalize_text
-    elif model == "embedding":
-        strategy = getattr(config, "XLMR_PREPROCESS_STRATEGY", "aggressive")
-        norm_fn = utils.PREPROCESS_REGISTRY.get(strategy, utils.xlmr_normalize_text)
-    else:
-        norm_fn = utils.extended_normalize_text
-
-    df = prepare_scoring_dataframe(str(input_file), normalize_func=norm_fn)
+    df = prepare_scoring_for_model(str(input_file), model)
     if "place_name" not in df.columns:
         n_places = min(8, max(1, len(df) // 5))
         place_names = [f"ร้านที่ {i + 1}" for i in range(n_places)]

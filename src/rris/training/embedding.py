@@ -19,8 +19,12 @@ from sentence_transformers import SentenceTransformer
 
 from rris import config
 from rris import utils
+from rris.evaluation.selection import classifier_val_mae, pick_lowest_mae
+from rris.training.embedding_cache import embedding_cache_path, texts_fingerprint
+from rris.training.embedding_finetune import finetune_embedding_model, resolve_embedding_model_path
 
-def main() -> None:
+
+def main(finetune: bool = False) -> None:
     print("--- Step 1: Loading data ---")
     # ใช้ preprocess แบบเดียวกับ XLM-R ดีที่สุด (aggressive) หรือที่เซ็ตไว้ใน config
     strategy = getattr(config, "XLMR_PREPROCESS_STRATEGY", "aggressive")
@@ -41,24 +45,41 @@ def main() -> None:
     y_train = df_train["user_rating"].values
     y_val = df_val["user_rating"].values
 
+    do_finetune = finetune or getattr(config, "EMBEDDING_FINETUNE", False)
+    embed_model_name = config.EMBEDDING_MODEL_NAME
+    finetuned_path = None
+    if do_finetune:
+        print("\n--- Step 1.5: Fine-tuning embedding model (opt-in) ---")
+        finetuned_path = finetune_embedding_model(
+            df_train["text"].tolist(),
+            y_train,
+        )
+        embed_model_name = finetuned_path
+
     print("\n--- Step 2: Extracting Sentence Embeddings ---")
-    cache_path = getattr(config, "EMBEDDING_CACHE_PATH", "data/embedding_cache.joblib")
+    texts_hash = texts_fingerprint(
+        df_train["text"].tolist() + df_val["text"].tolist()
+    )
+    cache_path = embedding_cache_path(
+        embed_model_name,
+        strategy,
+        len(df_train),
+        len(df_val),
+        texts_hash,
+    )
     
+    X_train = X_val = None
     if os.path.exists(cache_path):
         print(f"Loading cached embeddings from {cache_path}...")
         cache_data = joblib.load(cache_path)
         if len(cache_data["X_train"]) == len(y_train) and len(cache_data["X_val"]) == len(y_val):
             X_train = cache_data["X_train"]
             X_val = cache_data["X_val"]
-        else:
-            print("Cached embeddings length mismatch. Ignoring cache...")
-            os.remove(cache_path)
-            cache_data = None
 
-    if "X_train" not in locals() or X_train is None:
-        print(f"Loading embedding model: {config.EMBEDDING_MODEL_NAME}")
+    if X_train is None:
+        print(f"Loading embedding model: {embed_model_name}")
         device = config.TORCH_DEVICE if config.TORCH_DEVICE != "cpu" else "cpu"
-        embed_model = SentenceTransformer(config.EMBEDDING_MODEL_NAME, device=device)
+        embed_model = SentenceTransformer(embed_model_name, device=device)
         
         print(f"Encoding {len(df_train)} training texts...")
         t0 = time.time()
@@ -99,7 +120,7 @@ def main() -> None:
     lr_clf.fit(X_train, y_train, sample_weight=sample_w)
     lr_val_preds = lr_clf.predict(X_val)
     lr_acc = accuracy_score(y_val, lr_val_preds)
-    lr_mae = mean_absolute_error(y_val, lr_val_preds)
+    lr_mae = classifier_val_mae(lr_clf, X_val, y_val)
     lr_f1 = f1_score(y_val, lr_val_preds, average='macro')
 
     # --- 2. XGBoost ---
@@ -127,7 +148,7 @@ def main() -> None:
     xgb_val_preds_raw = xgb_clf.predict(X_val)
     xgb_val_preds = xgb_val_preds_raw + 1
     xgb_acc = accuracy_score(y_val, xgb_val_preds)
-    xgb_mae = mean_absolute_error(y_val, xgb_val_preds)
+    xgb_mae = classifier_val_mae(xgb_clf, X_val, y_val)
     xgb_f1 = f1_score(y_val, xgb_val_preds, average='macro')
     
     # --- 3. Linear SVM ---
@@ -144,7 +165,7 @@ def main() -> None:
         svm_clf.fit(X_train, y_train, sample_weight=sample_w)
     svm_val_preds = svm_clf.predict(X_val)
     svm_acc = accuracy_score(y_val, svm_val_preds)
-    svm_mae = mean_absolute_error(y_val, svm_val_preds)
+    svm_mae = classifier_val_mae(svm_clf, X_val, y_val)
     svm_f1 = f1_score(y_val, svm_val_preds, average='macro')
     
     # --- 4. Random Forest ---
@@ -155,7 +176,7 @@ def main() -> None:
     rf_clf.fit(X_train, y_train, sample_weight=sample_w)
     rf_val_preds = rf_clf.predict(X_val)
     rf_acc = accuracy_score(y_val, rf_val_preds)
-    rf_mae = mean_absolute_error(y_val, rf_val_preds)
+    rf_mae = classifier_val_mae(rf_clf, X_val, y_val)
     rf_f1 = f1_score(y_val, rf_val_preds, average='macro')
 
     # --- 5. Compare and Select ---
@@ -169,17 +190,16 @@ def main() -> None:
     print(f"{'Random Forest':<25} | {rf_acc:<10.4f} | {rf_mae:<10.4f} | {rf_f1:<12.4f}")
     print("-" * 65)
 
-    models_f1 = {
-        "logistic_regression": (lr_clf, lr_f1, lr_acc),
-        "xgboost": (xgb_clf, xgb_f1, xgb_acc),
-        "linear_svm": (svm_clf, svm_f1, svm_acc),
-        "random_forest": (rf_clf, rf_f1, rf_acc)
+    models_mae = {
+        "logistic_regression": (lr_clf, lr_mae, lr_acc, lr_f1),
+        "xgboost": (xgb_clf, xgb_mae, xgb_acc, xgb_f1),
+        "linear_svm": (svm_clf, svm_mae, svm_acc, svm_f1),
+        "random_forest": (rf_clf, rf_mae, rf_acc, rf_f1),
     }
-    
-    best_clf_type = max(models_f1, key=lambda k: models_f1[k][1])
-    best_clf, best_f1, best_val_acc = models_f1[best_clf_type]
+    best_clf_type = pick_lowest_mae({k: v[1] for k, v in models_mae.items()})
+    best_clf, best_mae, best_val_acc, best_f1 = models_mae[best_clf_type]
 
-    print(f"\nWINNER: {best_clf_type.upper()} (F1-Macro: {best_f1:.4f})")
+    print(f"\nWINNER: {best_clf_type.upper()} (Val MAE: {best_mae:.4f}, F1-Macro: {best_f1:.4f})")
     print("="*65 + "\n")
 
     print("--- Step 4: Saving artifacts ---")
@@ -189,10 +209,15 @@ def main() -> None:
     
     meta = {
         "embedding_model": config.EMBEDDING_MODEL_NAME,
+        "finetuned_model_path": finetuned_path,
         "classifier": best_clf_type,
         "preprocess_strategy": strategy,
+        "cache_key": os.path.basename(cache_path),
+        "val_mae": best_mae,
         "val_accuracy": best_val_acc,
-        "val_f1_macro": best_f1
+        "val_f1_macro": best_f1,
+        "finetune": do_finetune,
+        "finetune_mode": config.EMBEDDING_FINETUNE_MODE if do_finetune else None,
     }
     meta_path = os.path.join(config.EMBEDDING_ARTIFACTS_DIR, "embedding_meta.json")
     with open(meta_path, "w", encoding="utf-8") as f:
@@ -202,4 +227,5 @@ def main() -> None:
     print("Done embedding training!")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(finetune="--finetune" in sys.argv)

@@ -31,7 +31,7 @@ from torch.utils.data import DataLoader
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from rris import config, utils
-from train_xlmr import ReviewDataset, run_epoch
+from rris.training.xlmr import ReviewDataset, run_epoch
 
 
 def run_single_experiment(

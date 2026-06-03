@@ -1,6 +1,6 @@
 # Embedding Preprocessing
 
-โมเดล **Sentence Embedding** (`intfloat/multilingual-e5-base`) + classifier (XGBoost / Logistic Regression)
+โมเดล **Sentence Embedding** (default: `intfloat/multilingual-e5-base`) + classifier
 
 ไฟล์โค้ด: `src/rris/training/embedding.py`, `src/rris/inference/embedding.py`
 
@@ -10,14 +10,11 @@
 
 ```text
 CSV/TSV
-  → normalize ตาม XLMR_PREPROCESS_STRATEGY   (default: aggressive)
+  → normalize (strategy จาก train config / embedding_meta.json)
   → clean_review_dataframe
-  → SentenceTransformer.encode (normalize_embeddings=True)
-  → Classifier (predict_proba)
-  → ค่าดาวเฉลี่ยจาก probability
+  → [opt-in] fine-tune SentenceTransformer
+  → encode → classifier → expected rating จาก proba
 ```
-
-ไม่มี feature engineering แยก (TF-IDF / extra features) — ใช้ vector จาก embedding model โดยตรง
 
 ---
 
@@ -25,25 +22,13 @@ CSV/TSV
 
 ### Train
 
-ใช้ strategy เดียวกับ XLM-R train:
+ใช้ `XLMR_PREPROCESS_STRATEGY` (default: `aggressive`) — บันทึกใน `embedding_meta.json` เป็น `preprocess_strategy`
 
-```python
-strategy = XLMR_PREPROCESS_STRATEGY  # default: "aggressive"
-normalize_func = PREPROCESS_REGISTRY.get(strategy, xlmr_normalize_text)
-df = load_and_standardize_data(RAW_DATA_PATH, normalize_func=normalize_func)
-```
+### Inference / Eval / Score / Web
 
-รายละเอียด: [text-normalization.md](text-normalization.md)
+`prepare_scoring_for_model(path, "embedding")` → `resolve_normalize_func("embedding")` อ่าน strategy จาก meta
 
-### Inference — ขึ้นกับ entry point
-
-| Path | normalize |
-|------|-----------|
-| `python -m rris evaluate --model embedding` | `aggressive` (จาก config) |
-| `scripts/initialize_web_data.py --model embedding` | `aggressive` (จาก config) |
-| `python -m rris score --model embedding` | `extended_normalize_text` ⚠️ |
-
-⚠️ Pipeline CLI (`score`) ใช้ `extended_normalize_text` สำหรับโมเดลที่ไม่ใช่ xlmr — ไม่ตรงกับตอน train/eval
+Train และ inference สอดคล้องกันหลังมี `embedding_meta.json`
 
 ---
 
@@ -56,64 +41,30 @@ df = load_and_standardize_data(RAW_DATA_PATH, normalize_func=normalize_func)
 
 ---
 
-## 3. Embedding extraction
+## 3. Embedding cache
 
-| Config | ค่า |
-|--------|-----|
-| `EMBEDDING_MODEL_NAME` | `"intfloat/multilingual-e5-base"` |
-| `EMBEDDING_BATCH_SIZE` | 32 |
-| `EMBEDDING_MAX_LENGTH` | 128 (config มีไว้; encode ใช้ model default) |
-| `normalize_embeddings` | **True** (L2 normalize vector) |
+Hashed path: `data/embedding_cache_{key}.joblib` — key จาก model name, strategy, ขนาด train/val, fingerprint ข้อความ
 
-```python
-X = embed_model.encode(
-    texts,
-    batch_size=EMBEDDING_BATCH_SIZE,
-    normalize_embeddings=True,
-)
+Meta บันทึก `cache_key` — cache เก่า (`embedding_cache.joblib`) ไม่ใช้แล้ว
+
+---
+
+## 4. Fine-tune (opt-in)
+
+```powershell
+python -m rris train embedding --finetune
 ```
 
-Embedding cache: `data/embedding_cache.joblib` (ถ้าขนาด train/val ตรงกับ cache)
+| Config | ค่า default |
+|--------|-------------|
+| `EMBEDDING_FINETUNE` | False |
+| `EMBEDDING_FINETUNE_MODEL` | BAAI/bge-m3 |
+| `EMBEDDING_FINETUNE_MODE` | supervised \| contrastive |
+
+Inference โหลด encoder จาก `finetuned_model_path` ใน meta ผ่าน `resolve_embedding_model_path()`
 
 ---
 
-## 4. Classifier
+## 5. Artifacts meta
 
-เทรนเปรียบเทียบหลายตัวแล้วเลือกที่ดีที่สุดบน validation:
-
-- Logistic Regression (`class_weight='balanced'`)
-- XGBoost
-- LinearSVC + calibration
-- Random Forest
-
-Sample weights: `compute_sample_weights_from_ratings` + `XGB_LOW_STAR_BOOST = 3.0`
-
----
-
-## 5. Inference
-
-`predict_embedding()`:
-
-1. โหลด `SentenceTransformer` จาก `embedding_meta.json`
-2. `encode` ข้อความที่ normalize แล้ว
-3. `clf.predict_proba` → `expected_rating_from_probs`
-
----
-
-## Smoke mode
-
-เมื่อ `RRIS_SMOKE=1`:
-
-```python
-EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-```
-
----
-
-## Artifacts
-
-| ไฟล์ | เนื้อหา |
-|------|---------|
-| `artifacts/embedding/embedding_meta.json` | ชื่อ embedding model, preprocess strategy, classifier type |
-| `artifacts/embedding/clf_model.joblib` | classifier ที่เลือก |
-| `data/embedding_cache.joblib` | cache vector (optional) |
+`artifacts/embedding/embedding_meta.json` — `embedding_model`, `preprocess_strategy`, `classifier`, `val_mae`, `cache_key`, `finetune*`

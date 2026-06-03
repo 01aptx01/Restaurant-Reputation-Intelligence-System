@@ -9,7 +9,8 @@ import sys      # ตัวเข้าถึงตัวแปร Interpreter �
 import numpy as np # ไลบรารีการประมวลผลเชิงตัวเลขและจัดสรรข้อมูล Array
 import pandas as pd # ไลบรารีการจัดการจัดเรียงและวิเคราะห์ตารางข้อมูลแบบ 2 มิติ
 
-from rris.inference.prep import prepare_scoring_dataframe
+from rris.inference.prep import prepare_scoring_for_model
+from rris.evaluation.metrics import compute_extended_metrics
 # นำเข้าตัววัดประสิทธิภาพระดับวิชาการของ Scikit-Learn ครบถ้วนตามมาตรฐานสากล
 from sklearn.metrics import (
     accuracy_score,       # สัดส่วนความถูกต้องของการจำแนกประเภท (Accuracy)
@@ -170,31 +171,8 @@ def majority_baseline_metrics(
 
 
 def compute_metrics(y_true: np.ndarray, expected: np.ndarray) -> dict:
-    """วิเคราะห์คำนวณเปรียบเทียบระหว่างคะแนนจริง (y_true) และคะแนนที่ AI คาดการณ์ (expected) เพื่อสรุปประสิทธิภาพทางสถิติ"""
-    y_pred = rounded_stars(expected) # ปัดเศษคะแนนทำนายทศนิยมมาเป็นคะแนนดาวจำนวนเต็ม
-    
-    # จัดทําตารางสรุปแจกแจงวิเคราะห์ Precision/Recall/F1 รายคลาส
-    report = classification_report(
-        y_true,
-        y_pred,
-        labels=LABELS,
-        output_dict=True,
-        zero_division=0,
-    )
-    # รวบรวมสรุปคำนวณและส่งกลับในแบบโครงสร้างเปรียบเทียบ
-    return {
-        "n_samples": int(len(y_true)),
-        "mae": float(mean_absolute_error(y_true, expected)),
-        "rmse": float(np.sqrt(mean_squared_error(y_true, expected))),
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "f1_macro": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
-        "f1_weighted": float(
-            f1_score(y_true, y_pred, average="weighted", zero_division=0)
-        ),
-        "per_class_recall": utils.per_class_recall(report),
-        "classification_report": report,
-        "confusion_matrix": confusion_matrix(y_true, y_pred, labels=LABELS).tolist(),
-    }
+    """วิเคราะห์คำนวณเปรียบเทียบระหว่างคะแนนจริงและคะแนนที่ AI คาดการณ์"""
+    return compute_extended_metrics(y_true, expected)
 
 
 def print_metrics(
@@ -210,7 +188,16 @@ def print_metrics(
     print(f"RMSE:        {metrics['rmse']:.4f}")        # ค่าผิดเพี้ยนน้ำหนักยกกำลังสอง (ขยายเคสทายพลาดห่างไกล)
     print(f"Accuracy:    {metrics['accuracy']:.4f}")    # ยอดจำแนกดาวถูกต้องทั้งหมด
     print(f"F1 macro:    {metrics['f1_macro']:.4f}")    # F1-Score เฉลี่ยความเท่าเทียมคลาสดาว
-    print(f"F1 weighted: {metrics['f1_weighted']:.4f}")# F1-Score เฉลี่ยอิงความสำคัญปริมาณดาว
+    print(f"F1 weighted: {metrics['f1_weighted']:.4f}")
+    if "off_by_one_accuracy" in metrics:
+        print(f"Off-by-1:    {metrics['off_by_one_accuracy']:.4f}")
+    if "anomaly_rate" in metrics:
+        print(f"Anomaly rate:{metrics['anomaly_rate']:.4f}")
+        print(
+            f"Anomaly P/R/F1: {metrics.get('anomaly_precision', 0):.4f} / "
+            f"{metrics.get('anomaly_recall', 0):.4f} / "
+            f"{metrics.get('anomaly_f1', 0):.4f}"
+        )
     
     # วนลูปพิมพ์ค่าการดึงกลับ (Recall) ของดาวดวงระดับ 1 ถึง 5 เพื่อให้ตรวจจับจุดอ่อนของโมเดล
     if metrics.get("per_class_recall"):
@@ -418,8 +405,7 @@ def main() -> None:
     # 1. การตรวจสอบสำหรับโมเดลหลัก Baseline (TF-IDF + XGBoost)
     # ==============================================================================
     if "baseline" in active:
-        # โหลดแยก Dataframe แบบเจาะจงใช้ตัวล้างคำเบาบางที่เหมาะสมกับฟีเจอร์ของ Baseline (ตัด Emoji)
-        df_baseline = prepare_scoring_dataframe(args.input, normalize_func=utils.extended_normalize_text)
+        df_baseline = prepare_scoring_for_model(args.input, "baseline")
         # ตรวจความสมดุลของการแจกแจงดาวในชุดข้อความประเมินเทียบกับดาวจริง
         utils.compare_rating_distributions(
             df_baseline["user_rating"].values,
@@ -465,8 +451,7 @@ def main() -> None:
     # 2. การตรวจสอบสำหรับโมเดลระดับลึก Advanced (XLM-RoBERTa Base)
     # ==============================================================================
     if "xlmr" in active:
-        # โหลดแยก Dataframe อิสระ และล้างคำโดยรักษา Emoji พร้อมบีบคำศัพท์ตัวซ้ำ (xlmr_normalize_text)
-        df_xlmr = prepare_scoring_dataframe(args.input, normalize_func=utils.xlmr_normalize_text)
+        df_xlmr = prepare_scoring_for_model(args.input, "xlmr")
         # ตรวจความสมดุลของการแจกแจงดาวในแบบของโมเดลระดับลึก
         utils.compare_rating_distributions(
             df_xlmr["user_rating"].values,
@@ -497,9 +482,7 @@ def main() -> None:
     # 2.5 การตรวจสอบสำหรับโมเดล Embedding (BGE-M3 + Classifier)
     # ==============================================================================
     if "embedding" in active:
-        strategy = getattr(config, "XLMR_PREPROCESS_STRATEGY", "aggressive")
-        normalize_func = utils.PREPROCESS_REGISTRY.get(strategy, utils.xlmr_normalize_text)
-        df_embed = prepare_scoring_dataframe(args.input, normalize_func=normalize_func)
+        df_embed = prepare_scoring_for_model(args.input, "embedding")
         y_true_embed = df_embed["user_rating"].values.astype(int)
         
         expected, probs = predict_embedding_with_probs(df_embed)

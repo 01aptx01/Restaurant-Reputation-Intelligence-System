@@ -127,6 +127,10 @@ def export_error_analysis(
     )
     severe_df.to_csv(severe_path, index=False, encoding="utf-8")
     paths = {"severe_errors": severe_path}
+    summary = build_confusion_summary(y_true, expected, min_delta=min_delta)
+    summary_path = os.path.join(out_dir, f"{prefix}_confusion_summary.json")
+    write_confusion_summary(summary_path, summary)
+    paths["confusion_summary"] = summary_path
     if probs is not None:
         max_prob = probs.max(axis=1)
         correct = pred_rounded == y_true
@@ -221,106 +225,13 @@ class FocalLoss(nn.Module):
         return loss
 
 
-def _get_thai_synonyms(word: str) -> list[str]:
-    try:
-        from pythainlp.corpus import wordnet
-
-        synsets = wordnet.synsets(word, lang="tha")
-        synonyms = set()
-        for syn in synsets:
-            for lemma in syn.lemma_names("tha"):
-                if lemma != word and lemma.strip():
-                    synonyms.add(lemma)
-        return list(synonyms)
-    except Exception:
-        return []
-
-
-def augment_synonym_replace(
-    text: str,
-    replace_prob: float = 0.3,
-    rng: np.random.RandomState | None = None,
-) -> str:
-    if rng is None:
-        rng = np.random.RandomState()
-    tokens = word_tokenize(text, engine="newmm")
-    if len(tokens) < 2:
-        return text
-    new_tokens = []
-    for token in tokens:
-        if rng.random() < replace_prob and len(token) > 1:
-            synonyms = _get_thai_synonyms(token)
-            new_tokens.append(rng.choice(synonyms) if synonyms else token)
-        else:
-            new_tokens.append(token)
-    return "".join(new_tokens)
-
-
-def augment_random_shuffle(
-    text: str,
-    shuffle_prob: float = 0.2,
-    rng: np.random.RandomState | None = None,
-) -> str:
-    if rng is None:
-        rng = np.random.RandomState()
-    if rng.random() > shuffle_prob:
-        return text
-    tokens = word_tokenize(text, engine="newmm")
-    if len(tokens) < 3:
-        return text
-    rng.shuffle(tokens)
-    return "".join(tokens)
-
-
-def augment_text(
-    text: str,
-    synonym_prob: float = 0.3,
-    shuffle_prob: float = 0.2,
-    rng: np.random.RandomState | None = None,
-) -> str:
-    if rng is None:
-        rng = np.random.RandomState()
-    technique = rng.choice(["synonym", "shuffle", "both"])
-    if technique == "synonym":
-        return augment_synonym_replace(text, replace_prob=synonym_prob, rng=rng)
-    if technique == "shuffle":
-        return augment_random_shuffle(text, shuffle_prob=1.0, rng=rng)
-    augmented = augment_synonym_replace(text, replace_prob=synonym_prob, rng=rng)
-    return augment_random_shuffle(augmented, shuffle_prob=1.0, rng=rng)
-
-
-def augment_minority_classes(
-    df: pd.DataFrame,
-    target_stars: tuple[int, ...] = (1, 2, 3),
-    target_count: int = 800,
-    synonym_prob: float = 0.3,
-    shuffle_prob: float = 0.2,
-    random_state: int = 42,
-) -> pd.DataFrame:
-    rng = np.random.RandomState(random_state)
-    augmented_rows = []
-    for star in target_stars:
-        star_df = df[df["user_rating"] == star]
-        current_count = len(star_df)
-        if current_count >= target_count:
-            print(f"  {star} stars: {current_count} rows (>= {target_count}, skip)")
-            continue
-        needed = target_count - current_count
-        print(f"  {star} stars: {current_count} -> augmenting {needed} more")
-        source_texts = star_df["text"].values
-        for i in range(needed):
-            original = source_texts[i % len(source_texts)]
-            augmented = augment_text(
-                original,
-                synonym_prob=synonym_prob,
-                shuffle_prob=shuffle_prob,
-                rng=rng,
-            )
-            augmented_rows.append({"text": augmented, "user_rating": star})
-    if not augmented_rows:
-        print("  No augmentation needed")
-        return df.reset_index(drop=True)
-    augmented_df = pd.DataFrame(augmented_rows)
-    combined = pd.concat([df, augmented_df], ignore_index=True)
-    print(f"\n  Augmentation: {len(df)} -> {len(combined)} rows (+{len(augmented_rows)})")
-    return combined
+from rris.data.augmentation import (  # noqa: F401
+    augment_from_error_csv,
+    augment_minority_classes,
+    augment_random_shuffle,
+    augment_synonym_replace,
+    augment_text,
+    apply_train_augmentation,
+    build_confusion_summary,
+    write_confusion_summary,
+)

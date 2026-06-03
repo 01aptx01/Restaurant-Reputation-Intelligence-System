@@ -13,7 +13,7 @@ Inference: `src/rris/inference/embedding.py`
 SentenceTransformer (multilingual-e5-base)
   → encode ข้อความเป็น vector (L2 normalized)
   → เทรน 4 classifiers บน embedding
-  → เลือกตัวที่ F1-macro บน val สูงสุด
+  → เลือกตัวที่ Val MAE ต่ำสุด
 ```
 
 Preprocessing: [docs/preprocessing/embedding.md](../preprocessing/embedding.md)
@@ -35,8 +35,8 @@ Preprocessing: [docs/preprocessing/embedding.md](../preprocessing/embedding.md)
 | `EMBEDDING_BATCH_SIZE` | 32 |
 | `normalize_embeddings` | **True** |
 
-- Cache vector ลง `data/embedding_cache.joblib` (ถ้าขนาด train/val ตรงกัน)
-- ถ้า cache mismatch จะ encode ใหม่
+- Cache vector ลง `data/embedding_cache_{hash}.joblib` (key จาก model + strategy + texts hash)
+- Fine-tune opt-in: `python -m rris train embedding --finetune` → `artifacts/embedding/finetuned_model/`
 
 ### Step 3 — Train & compare classifiers
 
@@ -60,7 +60,7 @@ Preprocessing: [docs/preprocessing/embedding.md](../preprocessing/embedding.md)
 | 3 | Linear SVC + CalibratedClassifierCV | `class_weight='balanced'` |
 | 4 | Random Forest | 100 trees, `class_weight='balanced'` |
 
-เกณฑ์เลือก winner: **F1-macro** บน validation  
+เกณฑ์เลือก winner: **Val MAE** ต่ำสุด  
 แสดงตารางเปรียบเทียบ Acc, MAE, F1 ทุกตัวก่อนเลือก
 
 ---
@@ -103,7 +103,7 @@ EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12
 | ไฟล์ | เนื้อหา |
 |------|---------|
 | `artifacts/embedding/clf_model.joblib` | classifier ที่ชนะ |
-| `artifacts/embedding/embedding_meta.json` | model name, classifier type, preprocess strategy, val metrics |
-| `data/embedding_cache.joblib` | cached train/val embeddings |
+| `artifacts/embedding/embedding_meta.json` | model name, classifier, preprocess, val_mae, cache_key, finetune path |
+| `data/embedding_cache_*.joblib` | hashed cached train/val embeddings |
 
-**หมายเหตุ:** embedding model เองไม่ fine-tune — โหลด pretrained จาก Hugging Face ทุกครั้ง encode
+**Fine-tune:** opt-in (`EMBEDDING_FINETUNE=False` by default) — supervised หรือ contrastive บน BGE-M3

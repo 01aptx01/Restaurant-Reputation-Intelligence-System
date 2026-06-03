@@ -9,11 +9,11 @@ import os
 import numpy as np
 import pandas as pd
 
-from rris import config, utils
+from rris import config
 from rris.inference.baseline import predict_baseline
 from rris.inference.common import ABSA_KEYWORDS, get_hex_color
 from rris.inference.embedding import predict_embedding
-from rris.inference.prep import prepare_scoring_dataframe
+from rris.inference.prep import prepare_scoring_dataframe, prepare_scoring_for_model
 from rris.inference.xlmr import predict_xlmr
 
 try:
@@ -22,8 +22,6 @@ try:
     HAS_SENT_TOKENIZE = True
 except ImportError:
     HAS_SENT_TOKENIZE = False
-
-_TRANSFORMER_MODELS = frozenset(("xlmr",))
 
 
 def parse_args() -> argparse.Namespace:
@@ -64,12 +62,7 @@ def main() -> None:
     args = parse_args()
     print(f"--- Running Inference & Integrity Check (model={args.model}) ---")
 
-    norm_fn = (
-        utils.xlmr_normalize_text
-        if args.model in _TRANSFORMER_MODELS
-        else utils.extended_normalize_text
-    )
-    df = prepare_scoring_dataframe(args.input, normalize_func=norm_fn)
+    df = prepare_scoring_for_model(args.input, args.model)
     predict_fn = _resolve_predict_fn(args.model)
     df["ai_expected_rating"] = predict_fn(df)
 

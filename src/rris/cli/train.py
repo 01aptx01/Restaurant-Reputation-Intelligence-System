@@ -29,7 +29,10 @@ def main(argv: list[str] | None = None) -> None:
     try:
         sys.argv = [f"{args.model}.py", *remainder]
         if hasattr(mod, "main"):
-            mod.main()
+            if args.model == "embedding":
+                mod.main(finetune="--finetune" in remainder)
+            else:
+                mod.main()
         elif hasattr(mod, "__main__"):
             pass
         else:

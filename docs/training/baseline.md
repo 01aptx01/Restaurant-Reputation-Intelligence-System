@@ -12,7 +12,7 @@ Inference: `src/rris/inference/baseline.py`
 ```text
 TF-IDF (Word + Char) + Extra features
   → เทรน 4 classifiers พร้อมกัน
-  → เลือกตัวที่ F1-macro บน val สูงสุด
+  → เลือกตัวที่ Val MAE ต่ำสุด
   → บันทึก artifact
 ```
 
@@ -29,7 +29,8 @@ Preprocessing: [docs/preprocessing/baseline.md](../preprocessing/baseline.md)
 | 3 | Linear SVC + CalibratedClassifierCV | ปรับ probability ให้ predict_proba ได้ |
 | 4 | Random Forest | 100 trees, `class_weight='balanced'` |
 
-เกณฑ์เลือก winner: **F1-macro** บน validation set
+เกณฑ์เลือก winner: **Val MAE** ต่ำสุด (รายงาน F1-macro ควบคู่)  
+Meta: `best_val_mae`, `best_f1_macro`, `preprocess_strategy: extended`
 
 ---
 
@@ -52,6 +53,8 @@ Preprocessing: [docs/preprocessing/baseline.md](../preprocessing/baseline.md)
 |--------|--------|------------|
 | Undersample 4★ | `BASELINE_UNDERSAMPLE_STAR4_FRACTION = 0.65` | สุ่มเก็บ 4 ดาวเหลือ 65% |
 | Oversample 1–2★ | `BASELINE_OVERSAMPLE_LOW_STARS = True`, `FACTOR = 5` | ทำซ้ำแถวดาวต่ำ 5 เท่า |
+| NLP augmentation | `AUGMENT_ENABLED` | `apply_train_augmentation()` หลัง resampling |
+| Error-driven augment | `AUGMENT_FROM_ERRORS` | opt-in จาก severe-error CSV |
 | Sample weights (XGB) | `XGB_USE_SAMPLE_WEIGHT = True` | balanced weights + `XGB_LOW_STAR_BOOST = 3.0` |
 | class_weight | sklearn models | `'balanced'` บน LR, SVM, RF |
 
