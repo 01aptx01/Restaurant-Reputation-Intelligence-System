@@ -53,7 +53,7 @@ Preprocessing: [docs/preprocessing/xlmr.md](../preprocessing/xlmr.md)
 1. **Synonym replacement** — WordNet Thai, แทนคำด้วยคำพ้องความหมาย
 2. **Random word shuffle** — สลับลำดับคำในประโยค
 
-ฟังก์ชัน: `augment_minority_classes()` ใน `src/rris/data/features.py`
+ฟังก์ชัน: `apply_train_augmentation()` ใน `src/rris/data/augmentation.py` (หลัง oversample)
 
 ---
 
@@ -111,14 +111,16 @@ Focal Loss: `src/rris/data/features.py` — โฟกัส hard examples ด้
 
 | รายการ | ค่า |
 |--------|-----|
-| Metric | **val_acc** |
+| Metric | **val MAE** (ต่ำสุด) |
 | Patience | `XLMR_EARLY_STOPPING_PATIENCE = 3` epochs |
-| บันทึก | best checkpoint (ไม่ใช่ epoch สุดท้าย) |
+| บันทึก | best checkpoint + `artifacts/xlmr/xlmr_meta.json` |
 
 ```text
-ถ้า val_acc ไม่ดีขึ้นติด 3 epoch → หยุด
+ถ้า val MAE ไม่ดีขึ้นติด patience epoch → หยุด
 restore best_state → save_pretrained
 ```
+
+Meta: `preprocess_strategy`, `best_val_mae`, `best_epoch`
 
 ---
 
@@ -151,3 +153,4 @@ XLMR_FOCAL_GAMMA = 2.0
 | Path | เนื้อหา |
 |------|---------|
 | `artifacts/xlmr/` | model weights + tokenizer (Hugging Face format) |
+| `artifacts/xlmr/xlmr_meta.json` | preprocess, best_val_mae, best_epoch |

@@ -17,7 +17,7 @@ STAR_LABELS = ["1", "2", "3", "4", "5"]
 MODEL_LABELS = {
     "baseline": "Baseline (TF-IDF + XGBoost)",
     "xlmr": "XLM-R",
-    "embedding": "Embedding (BGE-M3)",
+    "embedding": "Embedding",
     "ensemble": "Hybrid Ensemble (XLM-R + BGE-M3)",
     "wangchan": "WangchanBERTa (Thai)",
     "hybrid_ensemble": "Hybrid Thai (Model 6)",
@@ -36,9 +36,14 @@ COLORS = {
 SUMMARY_METRICS = [
     ("mae", "MAE", "lower", "ดาว (ยิ่งต่ำยิ่งดี)"),
     ("rmse", "RMSE", "lower", "ดาว (ยิ่งต่ำยิ่งดี)"),
+    ("off_by_one_accuracy", "Off-by-1 acc", "higher", "ทายผิดไม่เกิน 1 ดาว"),
     ("accuracy", "Accuracy", "higher", "สัดส่วนทายถูก (ปัด 1–5)"),
     ("f1_macro", "F1 (macro)", "higher", "F1 เฉลี่ยทุกดาว"),
     ("f1_weighted", "F1 (weighted)", "higher", "F1 ถ่วงตามจำนวนตัวอย่าง"),
+    ("recall_star_1", "Recall ★1", "higher", "ดึงกลับรีวิว 1 ดาว"),
+    ("recall_star_2", "Recall ★2", "higher", "ดึงกลับรีวิว 2 ดาว"),
+    ("anomaly_f1", "Anomaly F1", "higher", "F1 การ flag delta≥threshold"),
+    ("anomaly_rate", "Anomaly rate", "lower", "สัดส่วนรีวิวที่ flag"),
 ]
 
 
@@ -47,7 +52,29 @@ def load_report(path: str) -> dict:
         return json.load(f)
 
 
+def _embedding_label_from_meta() -> str:
+    """Build display label from embedding_meta.json (E5 vs fine-tuned BGE-M3)."""
+    meta_path = os.path.join(config.EMBEDDING_ARTIFACTS_DIR, "embedding_meta.json")
+    if not os.path.isfile(meta_path):
+        return MODEL_LABELS["embedding"]
+    try:
+        with open(meta_path, encoding="utf-8") as f:
+            meta = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return MODEL_LABELS["embedding"]
+    if meta.get("finetune") and meta.get("finetuned_model_path"):
+        base = meta.get("finetune_mode", "finetune")
+        model = meta.get("embedding_model", "BGE-M3")
+        short = str(model).split("/")[-1]
+        return f"Embedding ({short}, {base})"
+    model = meta.get("embedding_model", config.EMBEDDING_MODEL_NAME)
+    short = str(model).split("/")[-1]
+    return f"Embedding ({short})"
+
+
 def get_model_label(model_key: str) -> str:
+    if model_key == "embedding":
+        return _embedding_label_from_meta()
     return MODEL_LABELS.get(model_key, model_key.upper().replace("_", "-"))
 
 

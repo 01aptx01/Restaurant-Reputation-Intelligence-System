@@ -108,10 +108,24 @@ bun run web_app/index.ts
 ## Research / tuning (optional)
 
 ```powershell
+python scripts/run_experiments.py experiments/manifests/baseline_sweep.yaml
 python scripts/eda_baseline_data.py
 python scripts/tune_baseline.py --append-try-log
-python scripts/summarize_tune_ceiling.py
-python experiments/run_all_preprocess.py
+python experiments/xlmr_preprocess_ablation.py --epochs 1
+```
+
+ดู [experiments.md](experiments.md)
+
+---
+
+## Tests (optional)
+
+หลัง `pip install -r requirements.txt` และ `pip install -e ".[dev]"`:
+
+```powershell
+pytest tests/ -q
+$env:RRIS_SMOKE="1"
+pytest tests/test_predict_roundtrip.py -q
 ```
 
 ---
@@ -121,3 +135,5 @@ python experiments/run_all_preprocess.py
 | หัวข้อ | ไฟล์ |
 |--------|------|
 | ทุกโฟลเดอร์/ไฟล์ | [directory-guide.md](directory-guide.md) |
+| เมตริก eval | [evaluation.md](evaluation.md) |
+| ทดลอง / manifests | [experiments.md](experiments.md) |

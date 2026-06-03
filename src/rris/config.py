@@ -41,6 +41,7 @@ DUPLICATE_KEEP = "first"        # หากเจอรีวิวซ้ำก�
 ARTIFACTS_DIR = _p("artifacts")                                          # โฟลเดอร์หลักสำหรับจัดเก็บโมเดลที่ฝึกฝนเสร็จแล้ว
 BASELINE_ARTIFACTS_DIR = _p("artifacts", "baseline")                      # โฟลเดอร์จัดเก็บโมเดลกลุ่ม Baseline
 XLMR_ARTIFACTS_DIR = _p("artifacts", "xlmr")                              # โฟลเดอร์จัดเก็บโมเดลกลุ่ม XLM-RoBERTa
+XLMR_META_PATH = _p("artifacts", "xlmr", "xlmr_meta.json")
 WANGCHAN_ARTIFACTS_DIR = os.path.join(ARTIFACTS_DIR, "wangchan")
 HYBRID_ARTIFACTS_DIR = os.path.join(ARTIFACTS_DIR, "hybrid_ensemble")
 HYBRID_META_PATH = os.path.join(HYBRID_ARTIFACTS_DIR, "hybrid_meta.json")                      # [NEW] โฟลเดอร์จัดเก็บโมเดล WangchanBERTa
@@ -162,6 +163,9 @@ AUGMENT_TARGET_COUNT = 800                 # จำนวนตัวอย่�
 AUGMENT_SYNONYM_PROB = 0.3                 # ความน่าจะเป็นในการสุ่มแทนที่คำด้วยคำพ้องความหมาย (30%)
 AUGMENT_SHUFFLE_PROB = 0.2                 # ความน่าจะเป็นในการสลับลำดับคำในประโยค (20%)
 AUGMENT_RANDOM_STATE = 42                  # ค่าความสุ่มคงที่สำหรับ reproducibility ของ augmentation
+AUGMENT_FROM_ERRORS = False                # เปิด augment จาก error analysis export
+AUGMENT_FROM_ERRORS_PATH = ""              # path ไป severe error CSV
+AUGMENT_FROM_ERRORS_FACTOR = 2             # จำนวนคopies ต่อ error row
 
 # ==============================================================================
 # 10. การกำหนดค่าเพื่อสกัดข้อผิดพลาดและวิเคราะห์ (ERROR ANALYSIS SETTINGS)
@@ -198,9 +202,15 @@ EMBEDDING_MODEL_NAME = "intfloat/multilingual-e5-base"   # โมเดล Embed
 EMBEDDING_BATCH_SIZE = 32
 EMBEDDING_MAX_LENGTH = 128
 EMBEDDING_ARTIFACTS_DIR = _p("artifacts", "embedding")
-EMBEDDING_CACHE_PATH = _p("data", "embedding_cache.joblib")
+EMBEDDING_CACHE_PATH = _p("data", "embedding_cache.joblib")  # legacy; prefer hashed cache
 EMBEDDING_CLF_TYPE = "xgb"              # 'xgb' หรือ 'lr' (Logistic Regression)
 EMBEDDING_LR_MAX_ITER = 1000
+EMBEDDING_FINETUNE = False
+EMBEDDING_FINETUNE_MODEL = "BAAI/bge-m3"
+EMBEDDING_FINETUNE_MODE = "supervised"  # supervised | contrastive
+EMBEDDING_FINETUNE_EPOCHS = 2
+EMBEDDING_FINETUNE_BATCH_SIZE = 16
+EMBEDDING_FINETUNE_OUTPUT = _p("artifacts", "embedding", "finetuned_model")
 
 # ==============================================================================
 # 11.7 พารามิเตอร์การตั้งค่าโมเดล Hybrid Ensemble (XLM-R + Sentence Embedding Soft Voting)
@@ -224,10 +234,10 @@ XLMR_USE_CLASS_WEIGHT = True           # เปิดใช้งาน Weighted
 XLMR_LOW_STAR_BOOST = 1.5              # ตัวคูณเร่งพิเศษสำหรับโมเดลระดับสูงเมื่อเทรนกลุ่มดาว 1-2 ดาว
 XLMR_EARLY_STOPPING_PATIENCE = 3       # ระบบจะสั่งหยุดทันทีหากความแม่นยำบน Holdout คงที่ต่อเนื่องกัน 3 รอบ Epoch
 XLMR_USE_LR_SCHEDULER = True           # เปิดใช้งานตัวปรับแต่งค่าความเร็วในการเรียนรู้อัตโนมัติ (Linear Warmup Scheduler)
-XLMR_USE_REGRESSION = True             # [NEW] เปิดใช้โหมด Ordinal Regression (MSE Loss) เพื่อลงโทษความห่างของดาวแทนการจัดกลุ่มคลาส
+XLMR_USE_REGRESSION = True             # Ordinal Regression (MSE Loss); disables Focal Loss below
 
 # --- Focal Loss สำหรับ XLM-R ---
-XLMR_USE_FOCAL_LOSS = True             # เปิดใช้ Focal Loss แทน CrossEntropyLoss เพื่อโฟกัสเคสที่ทายผิดบ่อย (Hard examples)
+XLMR_USE_FOCAL_LOSS = True             # Used only when XLMR_USE_REGRESSION=False (classification mode)
 XLMR_FOCAL_ALPHA = None                # Alpha สำหรับ Focal Loss (None = ใช้ class_weights แทน, หรือกำหนด list 5 ค่า)
 XLMR_FOCAL_GAMMA = 2.0                 # Gamma สำหรับ Focal Loss (ยิ่งสูง ยิ่งโฟกัสเคสยากมากขึ้น, ค่ามาตรฐาน = 2.0)
 

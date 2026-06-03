@@ -36,6 +36,8 @@ Restaurant-Reputation-Intelligence-System/
 | [training/baseline_optuna.md](training/baseline_optuna.md) | Optuna + 5-fold CV |
 | [training/xlmr.md](training/xlmr.md) | XLM-R fine-tune, AMP, Focal Loss |
 | [training/embedding.md](training/embedding.md) | E5 embedding + classifier |
+| [evaluation.md](evaluation.md) | เมตริก MAE, anomaly, model selection |
+| [experiments.md](experiments.md) | run_experiments.py + manifests |
 
 ## Scope โมเดล
 

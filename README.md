@@ -34,11 +34,16 @@ Web UI เลือกโมเดลที่ **evaluate ได้ MAE ต่�
 
 ## Preprocessing
 
-ดู [docs/preprocessing/README.md](docs/preprocessing/README.md) — อธิบายขั้นตอนล้างข้อมูลและแปลงฟีเจอร์ของแต่ละโมเดล
+ดู [docs/preprocessing/README.md](docs/preprocessing/README.md) — train/inference ใช้ `resolve_normalize_func` + meta `preprocess_strategy`
 
 ## Training
 
-ดู [docs/training/README.md](docs/training/README.md) — อธิบายเทคนิคการเทรน, imbalance handling และ hyperparameters ของแต่ละโมเดล
+ดู [docs/training/README.md](docs/training/README.md) — เลือก winner ด้วย **Val MAE**, augmentation รวมศูนย์, embedding fine-tune opt-in
+
+## Evaluation & experiments
+
+- [docs/evaluation.md](docs/evaluation.md) — เมตริกทั้งหมด + anomaly definitions
+- [docs/experiments.md](docs/experiments.md) — `scripts/run_experiments.py` + manifests
 
 ## Smoke test
 
@@ -47,4 +52,5 @@ $env:RRIS_SMOKE="1"
 python scripts/generate_mock_data.py
 python -m rris train baseline
 python -m rris evaluate --model baseline --output outputs/eval/eval_report.json
+pytest tests/ -q
 ```

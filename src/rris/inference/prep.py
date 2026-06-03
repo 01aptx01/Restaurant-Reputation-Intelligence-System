@@ -8,6 +8,7 @@ import os
 import pandas as pd
 
 from rris import config, utils
+from rris.data.normalize import resolve_normalize_func
 
 
 def prepare_scoring_dataframe(file_path: str, normalize_func=None) -> pd.DataFrame:
@@ -23,3 +24,11 @@ def prepare_scoring_dataframe(file_path: str, normalize_func=None) -> pd.DataFra
     )
     utils.log_cleaning_stats(stats, label=os.path.basename(file_path))
     return df
+
+
+def prepare_scoring_for_model(file_path: str, model: str) -> pd.DataFrame:
+    """Load and clean data using the same preprocess strategy as train artifacts."""
+    return prepare_scoring_dataframe(
+        file_path,
+        normalize_func=resolve_normalize_func(model),
+    )
