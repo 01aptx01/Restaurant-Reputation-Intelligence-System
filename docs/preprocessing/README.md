@@ -12,6 +12,8 @@
 
 ฟังก์ชัน normalize ข้อความทั้งหมดอยู่ใน [text-normalization.md](text-normalization.md)
 
+เทคนิคการเทรนแต่ละโมเดล: [docs/training/README.md](../training/README.md)
+
 ---
 
 ## ขั้นตอนร่วม (ทุกโมเดล)

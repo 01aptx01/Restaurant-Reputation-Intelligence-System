@@ -31,6 +31,11 @@ Restaurant-Reputation-Intelligence-System/
 | [preprocessing/xlmr.md](preprocessing/xlmr.md) | XLM-R tokenization |
 | [preprocessing/embedding.md](preprocessing/embedding.md) | Sentence embedding |
 | [preprocessing/text-normalization.md](preprocessing/text-normalization.md) | ฟังก์ชัน normalize ข้อความ |
+| [training/README.md](training/README.md) | สรุปเทคนิคการเทรนทุกโมเดล |
+| [training/baseline.md](training/baseline.md) | TF-IDF + XGBoost, 4 classifiers |
+| [training/baseline_optuna.md](training/baseline_optuna.md) | Optuna + 5-fold CV |
+| [training/xlmr.md](training/xlmr.md) | XLM-R fine-tune, AMP, Focal Loss |
+| [training/embedding.md](training/embedding.md) | E5 embedding + classifier |
 
 ## Scope โมเดล
 

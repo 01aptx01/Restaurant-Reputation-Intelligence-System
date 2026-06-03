@@ -36,6 +36,10 @@ Web UI เลือกโมเดลที่ **evaluate ได้ MAE ต่�
 
 ดู [docs/preprocessing/README.md](docs/preprocessing/README.md) — อธิบายขั้นตอนล้างข้อมูลและแปลงฟีเจอร์ของแต่ละโมเดล
 
+## Training
+
+ดู [docs/training/README.md](docs/training/README.md) — อธิบายเทคนิคการเทรน, imbalance handling และ hyperparameters ของแต่ละโมเดล
+
 ## Smoke test
 
 ```powershell
