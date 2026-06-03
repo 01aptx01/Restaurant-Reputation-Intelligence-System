@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rris"
+version = "0.1.0"
+description = "Restaurant Reputation Intelligence — ML pipeline library"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+rris-score = "rris.cli.score:main"
+rris-evaluate = "rris.cli.evaluate:main"
+rris-visualize = "rris.cli.visualize:main"
+rris-train = "rris.cli.train:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

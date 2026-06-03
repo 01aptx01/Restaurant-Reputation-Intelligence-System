@@ -1,0 +1,115 @@
+# ==============================================================================
+#                 FOODS REVIEW CLASSIFICATION PIPELINE & WEB APP
+#                          COMPREHENSIVE .GITIGNORE
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Python Environment & Compilation
+# ------------------------------------------------------------------------------
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.pyo
+
+# Packaging & Distribution
+*.egg-info/
+.eggs/
+dist/
+build/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Testing & Linting
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+htmlcov/
+
+# ------------------------------------------------------------------------------
+# 2. Node.js & Web App
+# ------------------------------------------------------------------------------
+node_modules/
+web_app/node_modules/
+*.tsbuildinfo
+web_app/dist/
+web_app/out/
+web_app/coverage/
+web_app/scored_reviews.json
+.eslintcache
+
+# ------------------------------------------------------------------------------
+# 3. Environment Variables (Secret keys, local configs)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------------------------------------------------------
+# 4. OS Specific Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ------------------------------------------------------------------------------
+# 5. IDEs and Editors
+# ------------------------------------------------------------------------------
+.cursor/
+.vscode/
+.antigravitycli/
+.agents/
+.idea/
+temp/
+tmp/
+
+# ------------------------------------------------------------------------------
+# 6. Project Data, Weights, Outputs, and Experiments
+# ------------------------------------------------------------------------------
+# Raw and Processed Datasets
+data/**/*.csv
+data/**/*.xlsx
+data/**/*.json
+data/**/*.txt
+!data/**/.gitkeep
+
+# Machine Learning Artifacts & Weights (Models, Vectorizers, SVDs)
+artifacts/**/*
+!artifacts/**/.gitkeep
+
+# Production Pipeline Outputs (Reports, Scored CSVs)
+# outputs/**/*
+!outputs/**/.gitkeep
+
+# Legacy reports at repo root — use outputs/reports/ instead
+reports/
+
+# Experimentation History & Logs (Ignore large data logs and outputs)
+experiments/**/*
+!experiments/**/*.py
+!experiments/**/*.md
+!experiments/**/.gitkeep
+
+outputs/
+*.log
