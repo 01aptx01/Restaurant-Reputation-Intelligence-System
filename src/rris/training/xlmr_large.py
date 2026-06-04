@@ -19,12 +19,13 @@ from rris.data.augmentation import apply_train_augmentation
 from rris.inference.common import expected_rating_from_probs
 from pathlib import Path
 
-# --- Overrides for Large Model ---
-config.XLMR_MODEL_NAME = "xlm-roberta-large"
-config.XLMR_ARTIFACTS_DIR = str(Path(config.ARTIFACTS_DIR) / "xlmr_large")
-config.XLMR_META_PATH = str(Path(config.ARTIFACTS_DIR) / "xlmr_large" / "xlmr_meta.json")
-config.BATCH_SIZE = max(1, config.BATCH_SIZE // 4) # ลดขนาดแบทช์เพื่อป้องกัน OOM สำหรับ Large Model
-config.XLMR_GRAD_ACCUM_STEPS = config.XLMR_GRAD_ACCUM_STEPS * 4 # เพิ่มสะสมเกรเดียนต์ชดเชย
+# --- Overrides for Large Model (ดึงค่าจาก config ที่เพิ่งเพิ่ม) ---
+config.XLMR_MODEL_NAME = config.XLMR_LARGE_MODEL_NAME
+config.XLMR_ARTIFACTS_DIR = config.XLMR_LARGE_ARTIFACTS_DIR
+config.XLMR_META_PATH = config.XLMR_LARGE_META_PATH
+config.BATCH_SIZE = config.XLMR_LARGE_BATCH_SIZE
+config.XLMR_GRAD_ACCUM_STEPS = config.XLMR_LARGE_GRAD_ACCUM_STEPS
+config.XLMR_GRADIENT_CHECKPOINTING = config.XLMR_LARGE_GRADIENT_CHECKPOINTING
 
 
 class ReviewDataset(Dataset):

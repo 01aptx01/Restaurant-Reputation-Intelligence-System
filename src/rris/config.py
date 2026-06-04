@@ -42,6 +42,8 @@ ARTIFACTS_DIR = _p("artifacts")                                          # โ�
 BASELINE_ARTIFACTS_DIR = _p("artifacts", "baseline")                      # โฟลเดอร์จัดเก็บโมเดลกลุ่ม Baseline
 XLMR_ARTIFACTS_DIR = _p("artifacts", "xlmr")                              # โฟลเดอร์จัดเก็บโมเดลกลุ่ม XLM-RoBERTa
 XLMR_META_PATH = _p("artifacts", "xlmr", "xlmr_meta.json")
+XLMR_LARGE_ARTIFACTS_DIR = _p("artifacts", "xlmr_large")                  # โฟลเดอร์จัดเก็บโมเดลกลุ่ม XLM-RoBERTa Large
+XLMR_LARGE_META_PATH = _p("artifacts", "xlmr_large", "xlmr_meta.json")
 TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "tfidf_vectorizer.joblib") # พาธจัดเก็บ Word-level TF-IDF
 CHAR_TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "char_tfidf_vectorizer.joblib") # พาธจัดเก็บ Char-level TF-IDF
 LSA_TRANSFORMER_PATH = _p("artifacts", "baseline", "lsa_transformer.joblib") # พาธจัดเก็บตัวลดมิติข้อมูล TruncatedSVD (LSA)
@@ -221,11 +223,15 @@ EMBEDDING_FINETUNE_OUTPUT = _p("artifacts", "embedding", "finetuned_model")
 # 12. พารามิเตอร์การจูนโมเดล XLM-RoBERTa (ADVANCED MODEL HYPERPARAMETERS)
 # ==============================================================================
 XLMR_MODEL_NAME = "xlm-roberta-base"   # ชื่อพรีเทรนโมเดลบน Hugging Face Hub (ขนาด 125M พารามิเตอร์)
+XLMR_LARGE_MODEL_NAME = "xlm-roberta-large" # ชื่อพรีเทรนโมเดลขนาดใหญ่ (ขนาด 355M พารามิเตอร์)
 MAX_LENGTH = 128                       # ความยาวโทเคนสูงสุดต่อรีวิวที่รองรับ (หากยาวกว่านี้จะทำการตัดหั่นแบบ Head+Tail)
 BATCH_SIZE = 24                        # ขนาดตัวอย่างต่อการก้าวรันหนึ่งครัง (ลดขนาดลงเพื่อป้องกันหน่วยความจำการ์ดจอแตกบน GPU 6GB)
+XLMR_LARGE_BATCH_SIZE = 4               # ขนาดแบทช์สำหรับโมเดลใหญ่ (ลดลงเพื่อป้องกัน OOM)
 XLMR_GRAD_ACCUM_STEPS = 1              # เพิ่มระดับสะสมเกรเดียนต์เพื่อรักษา Effective Batch Size = 8 เท่าเดิม
+XLMR_LARGE_GRAD_ACCUM_STEPS = 4        # รอบสะสมเกรเดียนต์สำหรับโมเดลใหญ่
 XLMR_USE_AMP = True                    # เปิดโหมด Automatic Mixed Precision ใช้ทศนิยม 16 บิต (FP16) ลดทอนแรมการ์ดจอลงเท่าตัว
 XLMR_GRADIENT_CHECKPOINTING = False     # เปิดใช้ระบบฝากผลเกรเดียนต์ไว้คำนวณใหม่แทนการเก็บค้างค้างเพื่อเซฟแรมการ์ดจอขั้นสุด (เหลือความจุขั้นต่ำ 6GB)
+XLMR_LARGE_GRADIENT_CHECKPOINTING = True # บังคับเปิดเพื่อโมเดลใหญ่เพื่อลดแรมการ์ดจอลง
 LEARNING_RATE = 2e-5                   # อัตราความเร็วในการปรับตัวโมเดล NLP ปรับตัวโมเดลระดับสูง
 EPOCHS = 3                             # จำนวนรอบการวิ่งสอนผ่านข้อมูลทั้งหมดสูงสุด 5 รอบ
 WEIGHT_DECAY = 0.01                    # อัตราการลดทอนค่าน้ำหนักตัวแปร L2 Regularization ป้องกัน Overfitting
