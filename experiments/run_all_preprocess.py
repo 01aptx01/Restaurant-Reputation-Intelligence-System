@@ -32,7 +32,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from rris import config, utils
-from train_xlmr import ReviewDataset, run_epoch
+from rris.training.xlmr import ReviewDataset, run_epoch
 
 # ===== ตั้งค่าผลลัพธ์ =====
 OUTPUT_DIR = os.path.join(config.EXPERIMENTS_DIR, "xlmr")

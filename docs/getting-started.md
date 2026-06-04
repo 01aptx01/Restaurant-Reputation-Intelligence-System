@@ -108,13 +108,20 @@ bun run web_app/index.ts
 ## Research / tuning (optional)
 
 ```powershell
+# รันทดลองแบบกวาดพารามิเตอร์ (Sweep)
 python scripts/run_experiments.py experiments/manifests/baseline_sweep.yaml
-python scripts/eda_baseline_data.py
-python scripts/tune_baseline.py --append-try-log
+python scripts/run_experiments.py experiments/manifests/xlmr_sweep.yaml
+
+# ทดลองเจาะจงเฉพาะเรื่อง (Ablation)
+python experiments/embedding_model_ablation.py
+python experiments/baseline_feature_ablation.py --cv 3
 python experiments/xlmr_preprocess_ablation.py --epochs 1
+
+# เปรียบเทียบผลลัพธ์ทั้งหมด
+python experiments/compare_results.py
 ```
 
-ดู [experiments.md](experiments.md)
+ดูรายละเอียดใน [experiments.md](experiments.md)
 
 ---
 
