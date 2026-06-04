@@ -166,7 +166,7 @@ BASELINE_KFOLD = 5                         # จำนวนรอบพับ�
 # ==============================================================================
 AUGMENT_ENABLED = True                     # เปิด/ปิดระบบขยายข้อมูลอัตโนมัติสำหรับคลาสดาวน้อย
 AUGMENT_TARGET_STARS = (1, 2, 3)           # คลาสดาวเป้าหมายที่จะทำ augmentation (ดาวที่มีข้อมูลน้อย)
-AUGMENT_TARGET_COUNT = 1400                 # จำนวนตัวอย่างเป้าหมายต่อคลาสหลัง augmentation (ถมให้ถึงหลักพัน)
+AUGMENT_TARGET_COUNT = 2500                 # จำนวนตัวอย่างเป้าหมายต่อคลาสหลัง augmentation (ถมให้ถึงหลักพัน)
 AUGMENT_SYNONYM_PROB = 0.3                 # ความน่าจะเป็นในการสุ่มแทนที่คำด้วยคำพ้องความหมาย (30%)
 AUGMENT_SHUFFLE_PROB = 0.2                 # ความน่าจะเป็นในการสลับลำดับคำในประโยค (20%)
 AUGMENT_RANDOM_STATE = 42                  # ค่าความสุ่มคงที่สำหรับ reproducibility ของ augmentation
@@ -249,7 +249,7 @@ XLMR_FOCAL_ALPHA = None                # Alpha สำหรับ Focal Loss (No
 XLMR_FOCAL_GAMMA = 2.0                 # Gamma สำหรับ Focal Loss (ยิ่งสูง ยิ่งโฟกัสเคสยากมากขึ้น, ค่ามาตรฐาน = 2.0)
 
 # --- Preprocessing Strategy สำหรับ XLM-R ---
-XLMR_PREPROCESS_STRATEGY = "aggressive" # กลยุทธ์การล้างข้อมูลสำหรับ XLM-R ('default', 'minimal', 'aggressive', 'keep_digits', 'emoji_tag', 'segment')
+XLMR_PREPROCESS_STRATEGY = "keep_digits" # กลยุทธ์การล้างข้อมูลสำหรับ XLM-R ('default', 'minimal', 'aggressive', 'keep_digits', 'emoji_tag', 'segment')
 
 # --- 3-Class Label Grouping สำหรับ XLM-R ---
 XLMR_USE_3CLASS = False                # ยุบรวมคลาส: Negative (1-2★), Neutral (3★), Positive (4-5★)
