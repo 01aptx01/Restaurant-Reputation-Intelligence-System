@@ -1,0 +1,176 @@
+{
+  "run_id": "20260604T125032Z",
+  "manifest": "xlmr_sweep.yaml",
+  "model": "xlmr",
+  "total_time_sec": 3762.6,
+  "variants": [
+    {
+      "variant": "v0_current_production",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 96.4,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\v0_current_production.json"
+    },
+    {
+      "variant": "a1_preprocess_default",
+      "status": "ok",
+      "mae": 0.3171731767263165,
+      "duration": 97.6,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\a1_preprocess_default.json"
+    },
+    {
+      "variant": "a2_preprocess_minimal",
+      "status": "ok",
+      "mae": 0.3171731767263165,
+      "duration": 90.9,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\a2_preprocess_minimal.json"
+    },
+    {
+      "variant": "a3_preprocess_keep_digits",
+      "status": "ok",
+      "mae": 0.3171731767263165,
+      "duration": 90.2,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\a3_preprocess_keep_digits.json"
+    },
+    {
+      "variant": "a4_preprocess_emoji_tag",
+      "status": "ok",
+      "mae": 0.3171731767263165,
+      "duration": 98.5,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\a4_preprocess_emoji_tag.json"
+    },
+    {
+      "variant": "a5_preprocess_segment",
+      "status": "ok",
+      "mae": 0.31627002896545753,
+      "duration": 90.5,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\a5_preprocess_segment.json"
+    },
+    {
+      "variant": "b1_classification_focal",
+      "status": "error",
+      "mae": null,
+      "duration": 97.7,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\b1_classification_focal.json"
+    },
+    {
+      "variant": "b2_classification_focal_high_gamma",
+      "status": "error",
+      "mae": null,
+      "duration": 92.0,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\b2_classification_focal_high_gamma.json"
+    },
+    {
+      "variant": "b3_classification_weighted_ce",
+      "status": "error",
+      "mae": null,
+      "duration": 96.5,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\b3_classification_weighted_ce.json"
+    },
+    {
+      "variant": "b4_regression_mse",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 96.7,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\b4_regression_mse.json"
+    },
+    {
+      "variant": "b5_classification_no_weight",
+      "status": "error",
+      "mae": null,
+      "duration": 96.9,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\b5_classification_no_weight.json"
+    },
+    {
+      "variant": "c1_lr_1e5",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 100.3,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\c1_lr_1e5.json"
+    },
+    {
+      "variant": "c2_lr_5e5",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 90.7,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\c2_lr_5e5.json"
+    },
+    {
+      "variant": "c3_lr_3e5_no_scheduler",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 99.3,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\c3_lr_3e5_no_scheduler.json"
+    },
+    {
+      "variant": "d1_maxlen_256",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 547.9,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\d1_maxlen_256.json"
+    },
+    {
+      "variant": "d2_maxlen_64",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 224.0,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\d2_maxlen_64.json"
+    },
+    {
+      "variant": "e1_low_star_boost_3",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 96.8,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\e1_low_star_boost_3.json"
+    },
+    {
+      "variant": "e2_low_star_boost_1",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 95.2,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\e2_low_star_boost_1.json"
+    },
+    {
+      "variant": "f1_3class_focal",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 91.6,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\f1_3class_focal.json"
+    },
+    {
+      "variant": "f2_3class_regression",
+      "status": "error",
+      "mae": null,
+      "duration": 98.1,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\f2_3class_regression.json"
+    },
+    {
+      "variant": "g1_5epochs_patience5",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 147.0,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\g1_5epochs_patience5.json"
+    },
+    {
+      "variant": "g2_2epochs_patience1",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 74.2,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\g2_2epochs_patience1.json"
+    },
+    {
+      "variant": "h1_best_combo_regression",
+      "status": "ok",
+      "mae": 0.3155458650288921,
+      "duration": 921.0,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\h1_best_combo_regression.json"
+    },
+    {
+      "variant": "h2_best_combo_focal",
+      "status": "error",
+      "mae": null,
+      "duration": 132.5,
+      "path": "C:\\Git\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T125032Z\\xlmr\\h2_best_combo_focal.json"
+    }
+  ]
+}

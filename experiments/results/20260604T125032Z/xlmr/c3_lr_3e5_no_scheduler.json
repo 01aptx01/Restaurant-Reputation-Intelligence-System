@@ -1,0 +1,33 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "c3_lr_3e5_no_scheduler",
+  "hypothesis": "Medium LR without scheduler for stable training.",
+  "model": "xlmr",
+  "config_overrides": {
+    "LEARNING_RATE": 3e-05,
+    "XLMR_USE_LR_SCHEDULER": false
+  },
+  "metrics": {
+    "mae": 0.3155458650288921,
+    "accuracy": 0.7586206896551724,
+    "f1_macro": 0.8118577075098814,
+    "f1_weighted": 0.7185498160010904,
+    "rmse": 0.42236188808718583,
+    "off_by_one_accuracy": 1.0,
+    "recall_star_1": 1.0,
+    "recall_star_2": 1.0,
+    "anomaly_rate": 0.0,
+    "anomaly_precision": 0.0,
+    "anomaly_recall": 0.0,
+    "anomaly_f1": 0.0,
+    "per_class_recall": {
+      "1": 1.0,
+      "2": 1.0,
+      "3": 1.0,
+      "4": 0.2222222222222222,
+      "5": 1.0
+    }
+  },
+  "status": "ok",
+  "duration": 99.3
+}

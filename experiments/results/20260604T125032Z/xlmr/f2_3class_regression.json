@@ -1,0 +1,13 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "f2_3class_regression",
+  "hypothesis": "3-class grouping is not compatible with regression; test classification.",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_USE_3CLASS": true,
+    "XLMR_USE_REGRESSION": false
+  },
+  "status": "error",
+  "error": "shapes (58,1) and (5,) not aligned: 1 (dim 1) != 5 (dim 0)",
+  "duration": 98.1
+}

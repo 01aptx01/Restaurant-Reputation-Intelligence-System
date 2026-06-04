@@ -1,0 +1,30 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "v0_current_production",
+  "hypothesis": "Reproduce current config.py settings as baseline reference.",
+  "model": "xlmr",
+  "config_overrides": {},
+  "metrics": {
+    "mae": 0.28908871421317445,
+    "accuracy": 0.6896551724137931,
+    "f1_macro": 0.728,
+    "f1_weighted": 0.5903448275862069,
+    "rmse": 0.39278779762254096,
+    "off_by_one_accuracy": 1.0,
+    "recall_star_1": 1.0,
+    "recall_star_2": 1.0,
+    "anomaly_rate": 0.0,
+    "anomaly_precision": 0.0,
+    "anomaly_recall": 0.0,
+    "anomaly_f1": 0.0,
+    "per_class_recall": {
+      "1": 1.0,
+      "2": 1.0,
+      "3": 1.0,
+      "4": 0.0,
+      "5": 1.0
+    }
+  },
+  "status": "ok",
+  "duration": 161.0
+}

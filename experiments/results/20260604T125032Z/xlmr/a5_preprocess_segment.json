@@ -1,0 +1,32 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "a5_preprocess_segment",
+  "hypothesis": "Word segmentation may help XLM-R understand Thai token boundaries.",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_PREPROCESS_STRATEGY": "segment"
+  },
+  "metrics": {
+    "mae": 0.31627002896545753,
+    "accuracy": 0.7068965517241379,
+    "f1_macro": 0.7516648764769065,
+    "f1_weighted": 0.6266158005852069,
+    "rmse": 0.4276875339815674,
+    "off_by_one_accuracy": 1.0,
+    "recall_star_1": 1.0,
+    "recall_star_2": 1.0,
+    "anomaly_rate": 0.0,
+    "anomaly_precision": 0.0,
+    "anomaly_recall": 0.0,
+    "anomaly_f1": 0.0,
+    "per_class_recall": {
+      "1": 1.0,
+      "2": 1.0,
+      "3": 1.0,
+      "4": 0.05555555555555555,
+      "5": 1.0
+    }
+  },
+  "status": "ok",
+  "duration": 90.5
+}

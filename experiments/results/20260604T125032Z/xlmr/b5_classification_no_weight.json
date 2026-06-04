@@ -1,0 +1,14 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "b5_classification_no_weight",
+  "hypothesis": "Ablation: unweighted CE to check if class balancing hurts accuracy.",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_USE_REGRESSION": false,
+    "XLMR_USE_FOCAL_LOSS": false,
+    "XLMR_USE_CLASS_WEIGHT": false
+  },
+  "status": "error",
+  "error": "shapes (58,1) and (5,) not aligned: 1 (dim 1) != 5 (dim 0)",
+  "duration": 96.9
+}
