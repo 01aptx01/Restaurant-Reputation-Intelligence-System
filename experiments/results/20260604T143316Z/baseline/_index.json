@@ -1,0 +1,57 @@
+{
+  "run_id": "20260604T143316Z",
+  "manifest": "augment_sweep.yaml",
+  "model": "baseline",
+  "total_time_sec": 937.3,
+  "variants": [
+    {
+      "variant": "aug_disabled",
+      "status": "ok",
+      "mae": 0.6483906530030017,
+      "duration": 114.5,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_disabled.json"
+    },
+    {
+      "variant": "aug_light_800",
+      "status": "ok",
+      "mae": 0.6483906530030017,
+      "duration": 110.8,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_light_800.json"
+    },
+    {
+      "variant": "aug_medium_1400",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 119.9,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_medium_1400.json"
+    },
+    {
+      "variant": "aug_heavy_2500",
+      "status": "ok",
+      "mae": 0.6361742181956088,
+      "duration": 187.5,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_heavy_2500.json"
+    },
+    {
+      "variant": "aug_all_stars",
+      "status": "ok",
+      "mae": 0.6433290090397544,
+      "duration": 144.4,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_all_stars.json"
+    },
+    {
+      "variant": "aug_high_synonym",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 130.7,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_high_synonym.json"
+    },
+    {
+      "variant": "aug_low_synonym",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 129.6,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T143316Z\\baseline\\aug_low_synonym.json"
+    }
+  ]
+}

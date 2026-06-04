@@ -77,6 +77,16 @@ variants:
       EMBEDDING_CLF_TYPE: "lr"
       EMBEDDING_LR_MAX_ITER: 2000
 
+  - name: c3_clf_svm
+    hypothesis: "Linear SVM — maximizes margin, strong for high-dimensional embedding vectors."
+    config:
+      EMBEDDING_CLF_TYPE: "svm"
+
+  - name: c4_clf_rf
+    hypothesis: "Random Forest — robust ensemble method, less prone to overfitting."
+    config:
+      EMBEDDING_CLF_TYPE: "rf"
+
   # ===================== D. CLASS BALANCE STRATEGIES =====================
 
   - name: d1_boost_5

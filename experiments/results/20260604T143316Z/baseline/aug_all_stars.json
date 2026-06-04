@@ -1,0 +1,40 @@
+{
+  "manifest": "augment_sweep.yaml",
+  "variant": "aug_all_stars",
+  "hypothesis": "Augment all star classes including 4-5 to test effect.",
+  "model": "baseline",
+  "config_overrides": {
+    "AUGMENT_ENABLED": true,
+    "AUGMENT_TARGET_COUNT": 1400,
+    "AUGMENT_TARGET_STARS": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "metrics": {
+    "mae": 0.6433290090397544,
+    "accuracy": 0.47002923976608185,
+    "f1_macro": 0.4299015015842403,
+    "f1_weighted": 0.46807213106697954,
+    "rmse": 0.8211107140790357,
+    "off_by_one_accuracy": 0.9349415204678363,
+    "recall_star_1": 0.40860215053763443,
+    "recall_star_2": 0.2459016393442623,
+    "anomaly_rate": 0.017543859649122806,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.2696629213483146,
+    "anomaly_f1": 0.4247787610619469,
+    "per_class_recall": {
+      "1": 0.40860215053763443,
+      "2": 0.2459016393442623,
+      "3": 0.43023255813953487,
+      "4": 0.6518218623481782,
+      "5": 0.3398268398268398
+    }
+  },
+  "status": "ok",
+  "duration": 144.4
+}
