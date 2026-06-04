@@ -18,18 +18,12 @@ MODEL_LABELS = {
     "baseline": "Baseline (TF-IDF + Classification Model)",
     "xlmr": "XLM-R",
     "embedding": "Embedding",
-    "ensemble": "Hybrid Ensemble (XLM-R + BGE-M3)",
-    "wangchan": "WangchanBERTa (Thai)",
-    "hybrid_ensemble": "Hybrid Thai (Model 6)",
 }
 
 COLORS = {
     "baseline": "#5c6bc0",
     "xlmr": "#26a69a",
     "embedding": "#ab47bc",
-    "ensemble": "#ff7043",
-    "wangchan": "#00bcd4",
-    "hybrid_ensemble": "#e91e63",
 }
 
 # Display order: higher-is-better vs lower-is-better

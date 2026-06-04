@@ -70,9 +70,3 @@ MAX_REVIEW_CHARS = 500              # Baseline truncation
 XLMR_PREPROCESS_STRATEGY = "aggressive"
 MAX_LENGTH = 128                    # XLM-R token limit
 ```
-
----
-
-## โมเดลที่ยังไม่ implement
-
-WangchanBERTa, Hybrid Ensemble มี config path ใน `config.py` แต่ยังไม่มี train/inference pipeline

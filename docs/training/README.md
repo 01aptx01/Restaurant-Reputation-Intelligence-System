@@ -51,9 +51,3 @@ EMBEDDING_FINETUNE_MODEL = "BAAI/bge-m3"
 # XLM-R — focal loss ไม่มีผลเมื่อ XLMR_USE_REGRESSION=True
 XLMR_USE_REGRESSION = True
 ```
-
----
-
-## โมเดลที่ยังไม่ implement
-
-WangchanBERTa และ Hybrid Ensemble มี config path แต่ยังไม่มีสคริปต์ train ใน repo

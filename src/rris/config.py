@@ -42,10 +42,6 @@ ARTIFACTS_DIR = _p("artifacts")                                          # โ�
 BASELINE_ARTIFACTS_DIR = _p("artifacts", "baseline")                      # โฟลเดอร์จัดเก็บโมเดลกลุ่ม Baseline
 XLMR_ARTIFACTS_DIR = _p("artifacts", "xlmr")                              # โฟลเดอร์จัดเก็บโมเดลกลุ่ม XLM-RoBERTa
 XLMR_META_PATH = _p("artifacts", "xlmr", "xlmr_meta.json")
-WANGCHAN_ARTIFACTS_DIR = os.path.join(ARTIFACTS_DIR, "wangchan")
-HYBRID_ARTIFACTS_DIR = os.path.join(ARTIFACTS_DIR, "hybrid_ensemble")
-HYBRID_META_PATH = os.path.join(HYBRID_ARTIFACTS_DIR, "hybrid_meta.json")                      # [NEW] โฟลเดอร์จัดเก็บโมเดล WangchanBERTa
-DUAL_MIXED_ARTIFACTS_DIR = _p("artifacts", "dual_mixed")                  # โฟลเดอร์จัดเก็บโมเดลผสม (Dual-Encoder)
 TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "tfidf_vectorizer.joblib") # พาธจัดเก็บ Word-level TF-IDF
 CHAR_TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "char_tfidf_vectorizer.joblib") # พาธจัดเก็บ Char-level TF-IDF
 LSA_TRANSFORMER_PATH = _p("artifacts", "baseline", "lsa_transformer.joblib") # พาธจัดเก็บตัวลดมิติข้อมูล TruncatedSVD (LSA)
@@ -213,17 +209,11 @@ EMBEDDING_FINETUNE_BATCH_SIZE = 16
 EMBEDDING_FINETUNE_OUTPUT = _p("artifacts", "embedding", "finetuned_model")
 
 # ==============================================================================
-# 11.7 พารามิเตอร์การตั้งค่าโมเดล Hybrid Ensemble (XLM-R + Sentence Embedding Soft Voting)
-# ==============================================================================
-ENSEMBLE_ARTIFACTS_DIR = _p("artifacts", "ensemble")
-ENSEMBLE_META_PATH = _p("artifacts", "ensemble", "ensemble_meta.json")
-
-# ==============================================================================
 # 12. พารามิเตอร์การจูนโมเดล XLM-RoBERTa (ADVANCED MODEL HYPERPARAMETERS)
 # ==============================================================================
 XLMR_MODEL_NAME = "xlm-roberta-base"   # ชื่อพรีเทรนโมเดลบน Hugging Face Hub (ขนาด 125M พารามิเตอร์)
 MAX_LENGTH = 128                       # ความยาวโทเคนสูงสุดต่อรีวิวที่รองรับ (หากยาวกว่านี้จะทำการตัดหั่นแบบ Head+Tail)
-BATCH_SIZE = 8                         # ขนาดตัวอย่างต่อการก้าวรันหนึ่งครัง (ลดขนาดลงเพื่อป้องกันหน่วยความจำการ์ดจอแตกบน GPU 6GB)
+BATCH_SIZE = 16                         # ขนาดตัวอย่างต่อการก้าวรันหนึ่งครัง (ลดขนาดลงเพื่อป้องกันหน่วยความจำการ์ดจอแตกบน GPU 6GB)
 XLMR_GRAD_ACCUM_STEPS = 1              # เพิ่มระดับสะสมเกรเดียนต์เพื่อรักษา Effective Batch Size = 8 เท่าเดิม
 XLMR_USE_AMP = True                    # เปิดโหมด Automatic Mixed Precision ใช้ทศนิยม 16 บิต (FP16) ลดทอนแรมการ์ดจอลงเท่าตัว
 XLMR_GRADIENT_CHECKPOINTING = True     # เปิดใช้ระบบฝากผลเกรเดียนต์ไว้คำนวณใหม่แทนการเก็บค้างค้างเพื่อเซฟแรมการ์ดจอขั้นสุด (เหลือความจุขั้นต่ำ 6GB)
@@ -251,15 +241,6 @@ XLMR_LR_SCHEDULER_FACTOR = 0.5         # ตัวแปรเสริม (ไ�
 XLMR_LR_SCHEDULER_PATIENCE = 1         # ตัวแปรเสริม (ไม่ได้ใช้งานแล้วเนื่องจากเปลี่ยนไปใช้ Linear schedule with Warmup)
 
 # ==============================================================================
-# 12.5 พารามิเตอร์สำหรับ WangchanBERTa (THAI-SPECIFIC ORDINAL REGRESSOR)
-# ==============================================================================
-WANGCHAN_MODEL_NAME = "airesearch/wangchanberta-base-att-spm-uncased"
-WANGCHAN_EPOCHS = 4
-WANGCHAN_LEARNING_RATE = 3e-5
-WANGCHAN_BATCH_SIZE = 8
-WANGCHAN_GRAD_ACCUM_STEPS = 1
-
-# ==============================================================================
 # 13. การประเมินและการทำนายผลตรวจจับความผิดปกติ (SCORING SETTINGS)
 # ==============================================================================
 ANOMALY_THRESHOLD = 2.0                # กำหนดความต่างของดาวจริงกับดาวทำนายของ AI ที่เริ่มเห็นความไม่เข้าพวก (ตั้งแต่ 2.0 ขึ้นไป)
@@ -277,12 +258,10 @@ if _os.environ.get("RRIS_SMOKE") == "1":
         TORCH_DEVICE = "cpu"
         XGB_DEVICE = "cpu"
     EPOCHS = 1
-    WANGCHAN_EPOCHS = 1
     XLMR_EARLY_STOPPING_PATIENCE = 1
     XLMR_USE_AMP = False
     XLMR_GRADIENT_CHECKPOINTING = False
     BATCH_SIZE = max(4, BATCH_SIZE)
-    WANGCHAN_BATCH_SIZE = max(4, WANGCHAN_BATCH_SIZE)
     EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     EMBEDDING_BATCH_SIZE = 32
     BASELINE_OVERSAMPLE_LOW_STARS = False
