@@ -1,0 +1,32 @@
+{
+  "manifest": "embedding_sweep.yaml",
+  "variant": "a1_e5_base",
+  "hypothesis": "multilingual-e5-base — current default, balanced speed/quality.",
+  "model": "embedding",
+  "config_overrides": {
+    "EMBEDDING_MODEL_NAME": "intfloat/multilingual-e5-base"
+  },
+  "metrics": {
+    "mae": 0.5795610547065735,
+    "accuracy": 0.5197368421052632,
+    "f1_macro": 0.4987685253880027,
+    "f1_weighted": 0.4941256412485551,
+    "rmse": 0.7400508844433599,
+    "off_by_one_accuracy": 0.9612573099415205,
+    "recall_star_1": 0.6881720430107527,
+    "recall_star_2": 0.36065573770491804,
+    "anomaly_rate": 0.010964912280701754,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.2830188679245283,
+    "anomaly_f1": 0.4411764705882353,
+    "per_class_recall": {
+      "1": 0.6881720430107527,
+      "2": 0.36065573770491804,
+      "3": 0.3333333333333333,
+      "4": 0.8319838056680162,
+      "5": 0.27705627705627706
+    }
+  },
+  "status": "ok",
+  "duration": 16.6
+}

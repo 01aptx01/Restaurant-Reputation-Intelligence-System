@@ -1,0 +1,14 @@
+{
+  "manifest": "embedding_sweep.yaml",
+  "variant": "e1_finetune_supervised",
+  "hypothesis": "Fine-tune embedding model with supervised loss before classifier.",
+  "model": "embedding",
+  "config_overrides": {
+    "EMBEDDING_FINETUNE": true,
+    "EMBEDDING_FINETUNE_MODE": "supervised",
+    "EMBEDDING_FINETUNE_EPOCHS": 2
+  },
+  "status": "error",
+  "error": "Please install `datasets` to use this function: `pip install datasets`.",
+  "duration": 10.2
+}

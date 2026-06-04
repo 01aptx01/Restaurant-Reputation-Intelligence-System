@@ -1,0 +1,16 @@
+{
+  "manifest": "embedding_sweep.yaml",
+  "variant": "f2_best_combo_e5_finetune",
+  "hypothesis": "E5-base + supervised finetune + balanced weights.",
+  "model": "embedding",
+  "config_overrides": {
+    "EMBEDDING_MODEL_NAME": "intfloat/multilingual-e5-base",
+    "EMBEDDING_FINETUNE": true,
+    "EMBEDDING_FINETUNE_MODE": "supervised",
+    "EMBEDDING_FINETUNE_EPOCHS": 2,
+    "XGB_LOW_STAR_BOOST": 2.5
+  },
+  "status": "error",
+  "error": "Please install `datasets` to use this function: `pip install datasets`.",
+  "duration": 10.1
+}
