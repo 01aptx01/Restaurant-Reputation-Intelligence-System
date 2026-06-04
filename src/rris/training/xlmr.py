@@ -294,6 +294,20 @@ def main(use_large: bool = False) -> None:
         model.gradient_checkpointing_enable() # เปิดระบบฝากผลเกรเดียนต์ย้อนกลับเซฟแรม
         model.config.use_cache = False         # ปิดระบบแคชคำตอบช่วงกลางที่ไม่ได้ใช้งานย้อนกลับ
         
+    # 2.5 แช่แข็งโครงสร้าง (Freeze Weights) เพื่อลดภาระการ์ดจอและรักษากลุ่มคำดั้งเดิม
+    freeze_embeddings = getattr(config, "XLMR_FREEZE_EMBEDDINGS", False)
+    if freeze_embeddings:
+        print("  > Freezing word embeddings...")
+        for param in model.roberta.embeddings.parameters():
+            param.requires_grad = False
+            
+    freeze_layers = getattr(config, "XLMR_FREEZE_LAYERS", 0)
+    if freeze_layers > 0:
+        print(f"  > Freezing bottom {freeze_layers} transformer layers...")
+        for layer in model.roberta.encoder.layer[:freeze_layers]:
+            for param in layer.parameters():
+                param.requires_grad = False
+        
     tokenizer = AutoTokenizer.from_pretrained(config.XLMR_MODEL_NAME) # โหลดโทเคนไนเซอร์คู่บารมีของ XLM-R
 
     # 3. โหลดและจัดโครงสร้างข้อมูลข้อความผ่านกลยุทธ์ตัวทำความสะอาดตามที่กำหนดใน Config
