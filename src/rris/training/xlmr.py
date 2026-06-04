@@ -4,6 +4,7 @@
 import os # เรียกใช้งานระบบจัดเตรียมไฟล์ของเครื่อง
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # บรรเทาการแบ่งส่วนแรมของการ์ดจอ (VRAM fragmentation) ป้องกัน CUDA OOM
 import json
+import argparse
 import numpy as np    # ไลบรารีการคำนวณเวกเตอร์และตัวเลข
 
 import torch          # ไลบรารีหลักประมวลผล Tensor และโมเดลของ PyTorch
@@ -252,8 +253,17 @@ def _log_training_device(device: torch.device) -> None:
         print("Training on CPU (no CUDA device reported by PyTorch).")
 
 
-def main() -> None:
+def main(use_large: bool = False) -> None:
     """แกนโปรแกรมควบคุมการจูนโมเดลประมวลผลข้อความ NLP ภาษาไทยระดับสูง"""
+    if use_large:
+        print(">>> RUNNING IN LARGE MODEL MODE <<<")
+        config.XLMR_MODEL_NAME = config.XLMR_LARGE_MODEL_NAME
+        config.XLMR_ARTIFACTS_DIR = config.XLMR_LARGE_ARTIFACTS_DIR
+        config.XLMR_META_PATH = config.XLMR_LARGE_META_PATH
+        config.BATCH_SIZE = config.XLMR_LARGE_BATCH_SIZE
+        config.XLMR_GRAD_ACCUM_STEPS = config.XLMR_LARGE_GRAD_ACCUM_STEPS
+        config.XLMR_GRADIENT_CHECKPOINTING = config.XLMR_LARGE_GRADIENT_CHECKPOINTING
+
     device = torch.device(config.TORCH_DEVICE) # ดึงพิกัดอุปกรณ์ประมวลผลหลัก (ชิป CUDA)
     _log_training_device(device)
     
@@ -540,4 +550,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main() # วิ่งตัวฝึกฝนเมื่อสคริปต์ทำงานโดดๆ
+    parser = argparse.ArgumentParser(description="Train XLM-R Model")
+    parser.add_argument("--large", action="store_true", help="Train XLM-R Large instead of Base")
+    args = parser.parse_args()
+    main(use_large=args.large) # วิ่งตัวฝึกฝนเมื่อสคริปต์ทำงานโดดๆ
