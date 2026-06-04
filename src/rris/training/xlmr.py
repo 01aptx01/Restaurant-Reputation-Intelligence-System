@@ -239,9 +239,23 @@ def evaluate_loader_mae(
     return float(np.mean(np.abs(expected - true)))
 
 
+def _log_training_device(device: torch.device) -> None:
+    """Print resolved device and a clear hint when CUDA exists but training falls back to CPU."""
+    print(f"PyTorch {torch.__version__} | TORCH_DEVICE={config.TORCH_DEVICE}")
+    if device.type == "cuda":
+        idx = torch.cuda.current_device()
+        print(f"Using GPU: {torch.cuda.get_device_name(idx)} (cuda:{idx})")
+        return
+    if torch.cuda.is_available():
+        print(f"WARNING: CUDA is visible but training uses CPU. {config.cuda_device_hint()}")
+    else:
+        print("Training on CPU (no CUDA device reported by PyTorch).")
+
+
 def main() -> None:
     """แกนโปรแกรมควบคุมการจูนโมเดลประมวลผลข้อความ NLP ภาษาไทยระดับสูง"""
     device = torch.device(config.TORCH_DEVICE) # ดึงพิกัดอุปกรณ์ประมวลผลหลัก (ชิป CUDA)
+    _log_training_device(device)
     
     # กำหนดจำนวนคลาสตามโหมดการทำงาน (Regression, 3-class, หรือ 5-class)
     use_regression = getattr(config, "XLMR_USE_REGRESSION", False)
@@ -355,15 +369,18 @@ def main() -> None:
     )
 
     # 7. สร้าง DataLoader สำหรับลูปสับเปลี่ยนข้อมูลและสุ่มสับแถว (Shuffle=True สำหรับชุดสอนเท่านั้น)
+    use_cuda = device.type == "cuda"
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
+        pin_memory=use_cuda,
     )
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
+        pin_memory=use_cuda,
     )
 
     # 8. นิยามตัวปรับค่าน้ำหนักสุดล้ำ AdamW

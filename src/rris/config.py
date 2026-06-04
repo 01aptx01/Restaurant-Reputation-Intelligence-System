@@ -78,31 +78,40 @@ XLMR_PREPROCESS_ABLATION_LOG = _p("experiments", "xlmr", "preprocess_ablation_lo
 # 6. การจัดสรรฮาร์ดแวร์ประมวลผล (COMPUTATIONAL RESOURCES)
 # ==============================================================================
 def _cuda_runtime_ok() -> bool:
-    """True only when CUDA works for this GPU + PyTorch wheel (incl. RTX 50 sm_120)."""
+    """True when a small CUDA kernel runs successfully (any GPU, incl. RTX 50 sm_120)."""
     if not torch.cuda.is_available():
-        return False
-    if os.environ.get("RRIS_FORCE_CUDA") == "1":
-        try:
-            torch.zeros(1, device="cuda")
-            return True
-        except Exception:
-            return False
-    major, _ = torch.cuda.get_device_capability(0)
-    if major >= 12 and "+cu128" not in torch.__version__:
         return False
     try:
         x = torch.randn(8, 8, device="cuda")
         _ = x @ x.T
+        torch.cuda.synchronize()
         del x, _
         return True
     except Exception:
         return False
 
 
+def cuda_device_hint() -> str:
+    """Human-readable hint when CUDA is visible but the runtime probe failed."""
+    if not torch.cuda.is_available():
+        return "PyTorch was built without CUDA or no NVIDIA driver is installed."
+    major, minor = torch.cuda.get_device_capability(0)
+    name = torch.cuda.get_device_name(0)
+    base = f"{name} (sm_{major}{minor}), torch {torch.__version__}"
+    if major >= 12 and "+cu128" not in torch.__version__:
+        return (
+            f"{base}. RTX 50-series needs a CUDA 12.8 wheel "
+            f"(e.g. pip install torch --index-url https://download.pytorch.org/whl/cu128)."
+        )
+    return f"{base}. Reinstall a PyTorch build that matches your GPU/driver."
+
+
 def _resolve_torch_device() -> str:
     forced = os.environ.get("FORCE_TORCH_DEVICE")
     if forced:
         return forced
+    if os.environ.get("RRIS_FORCE_CUDA") == "1":
+        return "cuda"
     return "cuda" if _cuda_runtime_ok() else "cpu"
 
 
