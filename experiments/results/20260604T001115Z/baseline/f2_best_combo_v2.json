@@ -1,0 +1,38 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "f2_best_combo_v2",
+  "hypothesis": "Conservative combo: moderate balance + large vocab + standard XGB.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_UNDERSAMPLE_STAR4_FRACTION": 0.7,
+    "BASELINE_OVERSAMPLE_FACTOR": 4,
+    "XGB_LOW_STAR_BOOST": 2.5,
+    "TFIDF_MAX_FEATURES": 12000,
+    "BASELINE_USE_CHAR_TFIDF": true,
+    "BASELINE_CHAR_MAX_FEATURES": 5000,
+    "BASELINE_USE_EXTRA_FEATURES": true
+  },
+  "metrics": {
+    "mae": 0.680055816252255,
+    "accuracy": 0.41885964912280704,
+    "f1_macro": 0.24303419419896327,
+    "f1_weighted": 0.336161198735491,
+    "rmse": 0.8534499641995882,
+    "off_by_one_accuracy": 0.9407894736842105,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.13114754098360656,
+    "anomaly_rate": 0.029239766081871343,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.49382716049382713,
+    "anomaly_f1": 0.6611570247933884,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.13114754098360656,
+      "3": 0.22868217054263565,
+      "4": 0.9129554655870445,
+      "5": 0.11688311688311688
+    }
+  },
+  "status": "ok",
+  "duration": 167.9
+}

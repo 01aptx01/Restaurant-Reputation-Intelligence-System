@@ -1,0 +1,32 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "d2_trunc1000",
+  "hypothesis": "Longer context: keep up to 1000 chars for detailed reviews.",
+  "model": "baseline",
+  "config_overrides": {
+    "MAX_REVIEW_CHARS": 1000
+  },
+  "metrics": {
+    "mae": 0.6852902416823077,
+    "accuracy": 0.4152046783625731,
+    "f1_macro": 0.23251464434879215,
+    "f1_weighted": 0.3294128527798032,
+    "rmse": 0.8608544456257871,
+    "off_by_one_accuracy": 0.9378654970760234,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.09836065573770492,
+    "anomaly_rate": 0.02850877192982456,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.4588235294117647,
+    "anomaly_f1": 0.6290322580645161,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.09836065573770492,
+      "3": 0.2131782945736434,
+      "4": 0.9190283400809717,
+      "5": 0.11255411255411256
+    }
+  },
+  "status": "ok",
+  "duration": 143.2
+}

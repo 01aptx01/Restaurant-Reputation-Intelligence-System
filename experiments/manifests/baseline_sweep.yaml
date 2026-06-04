@@ -1,0 +1,174 @@
+# experiments/manifests/baseline_sweep.yaml
+# ==============================================================================
+# Baseline TF-IDF + Classifier: Comprehensive Hyperparameter & Strategy Sweep
+# ==============================================================================
+# ทดลองปรับ TF-IDF, class balancing, model type, feature pipeline
+# เพื่อหา config ที่ให้ MAE ต่ำสุดบน holdout
+model: baseline
+
+variants:
+  # ---------- Variant 0: Current Production Config (Baseline) ----------
+  - name: v0_current_production
+    hypothesis: "Reproduce current config.py settings as baseline reference."
+    skip_train: false
+    config: {}
+
+  # ===================== A. CLASS BALANCE STRATEGIES =====================
+
+  - name: a1_oversample3_no_weight
+    hypothesis: "Moderate oversample without sample weights — simpler regularization."
+    config:
+      BASELINE_OVERSAMPLE_FACTOR: 3
+      XGB_USE_SAMPLE_WEIGHT: false
+
+  - name: a2_oversample8_boost4
+    hypothesis: "Aggressive oversampling + high boost for extreme low-star recall."
+    config:
+      BASELINE_OVERSAMPLE_FACTOR: 8
+      XGB_LOW_STAR_BOOST: 4.0
+
+  - name: a3_undersample4_50
+    hypothesis: "Aggressive undersampling of dominant 4-star class (keep 50%)."
+    config:
+      BASELINE_UNDERSAMPLE_STAR4_FRACTION: 0.5
+      BASELINE_OVERSAMPLE_FACTOR: 3
+
+  - name: a4_no_oversample_weight_only
+    hypothesis: "No oversampling, rely entirely on sample weights for balance."
+    config:
+      BASELINE_OVERSAMPLE_LOW_STARS: false
+      XGB_USE_SAMPLE_WEIGHT: true
+      XGB_LOW_STAR_BOOST: 5.0
+
+  # ===================== B. FEATURE PIPELINE VARIANTS =====================
+
+  - name: b1_tfidf_12k_bigram
+    hypothesis: "Larger vocabulary (12k) may capture more nuanced patterns."
+    config:
+      TFIDF_MAX_FEATURES: 12000
+      TFIDF_NGRAM_RANGE: [1, 2]
+
+  - name: b2_tfidf_5k_trigram
+    hypothesis: "Smaller vocab but trigrams capture longer phrases like 'ไม่อร่อยเลย'."
+    config:
+      TFIDF_MAX_FEATURES: 5000
+      TFIDF_NGRAM_RANGE: [1, 3]
+
+  - name: b3_lsa_300
+    hypothesis: "LSA 300 dims compresses noise while preserving semantic signal."
+    config:
+      BASELINE_USE_LSA: true
+      LSA_N_COMPONENTS: 300
+      TFIDF_MAX_FEATURES: 10000
+
+  - name: b4_lsa_500_no_char
+    hypothesis: "Large LSA without char TF-IDF — cleaner embedding-like features."
+    config:
+      BASELINE_USE_LSA: true
+      LSA_N_COMPONENTS: 500
+      BASELINE_USE_CHAR_TFIDF: false
+      TFIDF_MAX_FEATURES: 10000
+
+  - name: b5_char_only_6k
+    hypothesis: "Character n-grams only (no word TF-IDF) for robustness to slang."
+    config:
+      BASELINE_USE_CHAR_TFIDF: true
+      BASELINE_CHAR_MAX_FEATURES: 6000
+      BASELINE_CHAR_NGRAM_RANGE: [2, 6]
+      TFIDF_MAX_FEATURES: 0
+
+  - name: b6_no_extra_features
+    hypothesis: "Ablation: remove hand-crafted features to measure their impact."
+    config:
+      BASELINE_USE_EXTRA_FEATURES: false
+
+  # ===================== C. XGB HYPERPARAMETERS =====================
+
+  - name: c1_shallow_strong_reg
+    hypothesis: "Shallow trees (depth=3) + strong L2 regularization for generalization."
+    config:
+      XGB_PARAMS:
+        max_depth: 3
+        reg_lambda: 8.0
+        min_child_weight: 10
+        eta: 0.03
+
+  - name: c2_deep_fast
+    hypothesis: "Deeper trees (depth=6) + faster learning for complex patterns."
+    config:
+      XGB_PARAMS:
+        max_depth: 6
+        eta: 0.08
+        reg_lambda: 1.5
+        subsample: 0.7
+
+  - name: c3_many_rounds_slow
+    hypothesis: "More boosting rounds with very slow learning rate."
+    config:
+      XGB_ROUNDS: 1500
+      XGB_EARLY_STOPPING_ROUNDS: 80
+      XGB_PARAMS:
+        eta: 0.01
+        max_depth: 4
+
+  - name: c4_regression_mode
+    hypothesis: "Ordinal regression may improve MAE by learning star ordering."
+    config:
+      BASELINE_USE_REGRESSION: true
+      XGB_USE_SAMPLE_WEIGHT: false
+
+  # ===================== D. TEXT TRUNCATION =====================
+
+  - name: d1_trunc200
+    hypothesis: "Very short reviews: only first 200 chars (sentiment usually at start)."
+    config:
+      MAX_REVIEW_CHARS: 200
+
+  - name: d2_trunc1000
+    hypothesis: "Longer context: keep up to 1000 chars for detailed reviews."
+    config:
+      MAX_REVIEW_CHARS: 1000
+
+  # ===================== E. AUGMENTATION =====================
+
+  - name: e1_augment_target2000
+    hypothesis: "Heavy augmentation: target 2000 samples per minority class."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 2000
+      AUGMENT_TARGET_STARS: [1, 2, 3]
+
+  - name: e2_no_augment
+    hypothesis: "Ablation: disable augmentation to measure its contribution."
+    config:
+      AUGMENT_ENABLED: false
+
+  # ===================== F. BEST COMBINATIONS =====================
+
+  - name: f1_best_combo_v1
+    hypothesis: "Combine best strategies: undersample + oversample + char + deep + slow."
+    config:
+      BASELINE_UNDERSAMPLE_STAR4_FRACTION: 0.6
+      BASELINE_OVERSAMPLE_FACTOR: 5
+      XGB_LOW_STAR_BOOST: 3.0
+      BASELINE_USE_CHAR_TFIDF: true
+      TFIDF_MAX_FEATURES: 10000
+      MAX_REVIEW_CHARS: 500
+      XGB_PARAMS:
+        max_depth: 5
+        eta: 0.02
+        reg_lambda: 5.0
+        subsample: 0.8
+      XGB_ROUNDS: 1200
+      XGB_EARLY_STOPPING_ROUNDS: 60
+
+  - name: f2_best_combo_v2
+    hypothesis: "Conservative combo: moderate balance + large vocab + standard XGB."
+    config:
+      BASELINE_UNDERSAMPLE_STAR4_FRACTION: 0.7
+      BASELINE_OVERSAMPLE_FACTOR: 4
+      XGB_LOW_STAR_BOOST: 2.5
+      TFIDF_MAX_FEATURES: 12000
+      BASELINE_USE_CHAR_TFIDF: true
+      BASELINE_CHAR_MAX_FEATURES: 5000
+      BASELINE_USE_EXTRA_FEATURES: true

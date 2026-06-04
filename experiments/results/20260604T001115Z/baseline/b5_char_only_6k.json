@@ -1,0 +1,18 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "b5_char_only_6k",
+  "hypothesis": "Character n-grams only (no word TF-IDF) for robustness to slang.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_USE_CHAR_TFIDF": true,
+    "BASELINE_CHAR_MAX_FEATURES": 6000,
+    "BASELINE_CHAR_NGRAM_RANGE": [
+      2,
+      6
+    ],
+    "TFIDF_MAX_FEATURES": 0
+  },
+  "status": "error",
+  "error": "The 'max_features' parameter of TfidfVectorizer must be an int in the range [1, inf) or None. Got 0 instead.",
+  "duration": 9.0
+}

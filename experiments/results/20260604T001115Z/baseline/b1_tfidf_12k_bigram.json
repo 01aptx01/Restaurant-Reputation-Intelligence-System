@@ -1,0 +1,16 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "b1_tfidf_12k_bigram",
+  "hypothesis": "Larger vocabulary (12k) may capture more nuanced patterns.",
+  "model": "baseline",
+  "config_overrides": {
+    "TFIDF_MAX_FEATURES": 12000,
+    "TFIDF_NGRAM_RANGE": [
+      1,
+      2
+    ]
+  },
+  "status": "error",
+  "error": "The 'ngram_range' parameter of TfidfVectorizer must be an instance of 'tuple'. Got [1, 2] instead.",
+  "duration": 8.7
+}

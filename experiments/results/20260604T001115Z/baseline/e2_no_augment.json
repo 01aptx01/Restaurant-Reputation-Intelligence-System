@@ -1,0 +1,32 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "e2_no_augment",
+  "hypothesis": "Ablation: disable augmentation to measure its contribution.",
+  "model": "baseline",
+  "config_overrides": {
+    "AUGMENT_ENABLED": false
+  },
+  "metrics": {
+    "mae": 0.6886161545291355,
+    "accuracy": 0.4137426900584795,
+    "f1_macro": 0.23044497723566448,
+    "f1_weighted": 0.3270703885342044,
+    "rmse": 0.8632531290189764,
+    "off_by_one_accuracy": 0.9407894736842105,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.09836065573770492,
+    "anomaly_rate": 0.029239766081871343,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.49382716049382713,
+    "anomaly_f1": 0.6611570247933884,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.09836065573770492,
+      "3": 0.2131782945736434,
+      "4": 0.9190283400809717,
+      "5": 0.10822510822510822
+    }
+  },
+  "status": "ok",
+  "duration": 129.3
+}

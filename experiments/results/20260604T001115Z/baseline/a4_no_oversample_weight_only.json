@@ -1,0 +1,34 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "a4_no_oversample_weight_only",
+  "hypothesis": "No oversampling, rely entirely on sample weights for balance.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_OVERSAMPLE_LOW_STARS": false,
+    "XGB_USE_SAMPLE_WEIGHT": true,
+    "XGB_LOW_STAR_BOOST": 5.0
+  },
+  "metrics": {
+    "mae": 0.695290081203399,
+    "accuracy": 0.402046783625731,
+    "f1_macro": 0.21235660193551645,
+    "f1_weighted": 0.3044497644406913,
+    "rmse": 0.8756272353804264,
+    "off_by_one_accuracy": 0.9334795321637427,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.08196721311475409,
+    "anomaly_rate": 0.03289473684210526,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.4945054945054945,
+    "anomaly_f1": 0.6617647058823529,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.08196721311475409,
+      "3": 0.1821705426356589,
+      "4": 0.9291497975708503,
+      "5": 0.08225108225108226
+    }
+  },
+  "status": "ok",
+  "duration": 171.7
+}
