@@ -110,6 +110,7 @@ experiments/**/*
 !experiments/**/*.py
 !experiments/**/*.md
 !experiments/**/.gitkeep
+!experiments/**/docs
 
 outputs/
 *.log
