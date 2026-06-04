@@ -33,35 +33,6 @@ from rris.inference.common import expected_rating_from_probs
 from rris.training.baseline import fit_vectorizer_and_features, save_artifacts
 
 
-def _prepare_train_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply the same resampling / augmentation steps as baseline training."""
-    train_df = df
-    if config.BASELINE_MOCK_MIX_FRACTION > 0:
-        train_df = utils.mix_mock_training_data(
-            train_df,
-            getattr(config, "MOCK_TRAIN_PATH", None),
-            config.BASELINE_MOCK_MIX_FRACTION,
-            min_text_length=config.MIN_TEXT_LENGTH,
-            drop_duplicates=config.DROP_DUPLICATE_TEXT,
-            duplicate_keep=config.DUPLICATE_KEEP,
-            random_state=config.RANDOM_STATE,
-        )
-    if config.BASELINE_UNDERSAMPLE_STAR4_FRACTION < 1.0:
-        train_df = utils.undersample_star_ratings(
-            train_df,
-            star=4,
-            keep_fraction=config.BASELINE_UNDERSAMPLE_STAR4_FRACTION,
-            random_state=config.RANDOM_STATE,
-        )
-    if config.BASELINE_OVERSAMPLE_LOW_STARS:
-        train_df = utils.oversample_low_star_reviews(
-            train_df,
-            factor=config.BASELINE_OVERSAMPLE_FACTOR,
-        )
-    train_df = apply_train_augmentation(train_df)
-    return utils.apply_text_truncation(train_df, config.MAX_REVIEW_CHARS)
-
-
 def _fold_mae(
     clf,
     X_val,
@@ -97,7 +68,7 @@ def main() -> None:
         random_state=config.RANDOM_STATE,
         stratify=df["user_rating"],
     )
-    train_df = _prepare_train_df(train_df)
+    train_df = utils.prepare_baseline_train_df(train_df)
     holdout_df = utils.apply_text_truncation(holdout_df, config.MAX_REVIEW_CHARS)
     y_train_stars = train_df["user_rating"].values.astype(int)
 

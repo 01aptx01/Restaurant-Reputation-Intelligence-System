@@ -313,54 +313,8 @@ def main() -> None:
         label_test="HF test (after clean)",
     )
 
-    train_df = df_train # สร้างตัวแปรอ้างอิงตารางฝึกสอนสำหรับการสลับผสมตัวแปร
-    
-    # 4. นโยบายเสริมความแข็งแกร่ง 1: นำเข้าข้อความจำลองเฉลยสปอยรีวิว (Mock Mix) มาร่วมฝึกฝน Smoke Test 20%
-    if config.BASELINE_MOCK_MIX_FRACTION > 0:
-        before = len(train_df)
-        train_df = utils.mix_mock_training_data(
-            train_df,
-            getattr(config, "MOCK_TRAIN_PATH", None),
-            config.BASELINE_MOCK_MIX_FRACTION,
-            min_text_length=config.MIN_TEXT_LENGTH,
-            drop_duplicates=config.DROP_DUPLICATE_TEXT,
-            duplicate_keep=config.DUPLICATE_KEEP,
-            random_state=config.RANDOM_STATE,
-        )
-        print(
-            f"Mock mix (fraction={config.BASELINE_MOCK_MIX_FRACTION}): "
-            f"{before} -> {len(train_df)} rows"
-        )
-
-    # 5. นโยบายเสริมความแข็งแกร่ง 2: สุ่มสกัดลบข้อความ 4 ดาว (Undersampling) ซึ่งเป็น Majority คลาสมหาศาลออกเหลือเพียง 65%
-    if config.BASELINE_UNDERSAMPLE_STAR4_FRACTION < 1.0:
-        before = len(train_df)
-        train_df = utils.undersample_star_ratings(
-            train_df,
-            star=4,
-            keep_fraction=config.BASELINE_UNDERSAMPLE_STAR4_FRACTION,
-            random_state=config.RANDOM_STATE,
-        )
-        print(
-            f"Undersample 4-star (keep={config.BASELINE_UNDERSAMPLE_STAR4_FRACTION}): "
-            f"{before} -> {len(train_df)} rows"
-        )
-
-    # 6. นโยบายเสริมความแข็งแกร่ง 3: จำลองคัดลอกเพิ่มปริมาณแถวรีวิวคะแนนดาวต่ำ 1-2 ดาว (Oversampling) เพิ่ม 5 เท่า
-    if config.BASELINE_OVERSAMPLE_LOW_STARS:
-        train_df = utils.oversample_low_star_reviews(
-            train_df,
-            factor=config.BASELINE_OVERSAMPLE_FACTOR,
-        )
-        print(
-            f"Oversampled low stars (factor={config.BASELINE_OVERSAMPLE_FACTOR}): "
-            f"{len(df_train)} -> {len(train_df)} rows"
-        )
-
-    train_df = apply_train_augmentation(train_df)
-
-    # 7. หั่นเอาเฉพาะความยาวตัวอักษรเริ่มต้นสูงสุด 500 อักขระเพื่อประหยัดพื้นที่เวกเตอร์สแกนระดับประโยค
-    train_df = utils.apply_text_truncation(train_df, config.MAX_REVIEW_CHARS)
+    # 4-7. ประยุกต์ใช้นโยบายเสริมความแข็งแกร่งชุดข้อมูลทั้งหมด (Mock Mix, Undersample, Oversample, Augmentation, Truncation)
+    train_df = utils.prepare_baseline_train_df(df_train, verbose=True)
     df_val = utils.apply_text_truncation(df_val, config.MAX_REVIEW_CHARS)
 
     print("--- Step 2: TF-IDF + features ---")
