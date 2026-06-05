@@ -26,6 +26,7 @@ from rris.inference.baseline import predict_baseline_with_probs
 from rris.inference.embedding import predict_embedding_with_probs
 from rris.inference.prep import prepare_scoring_for_model
 from rris.inference.xlmr import predict_xlmr
+from rris.inference.cache import clear as clear_cache
 
 TRAINERS = {
     "baseline": "rris.training.baseline",
@@ -246,6 +247,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"  Hypothesis: {hypothesis}")
         print(f"{'=' * 60}")
 
+        clear_cache()
         snapshot = apply_overrides(overrides)
         variant_start = time.time()
         result: dict = {
