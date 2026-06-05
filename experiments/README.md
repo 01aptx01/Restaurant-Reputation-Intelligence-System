@@ -9,6 +9,7 @@ experiments/
 ├── manifests/                          # YAML sweep configs
 │   ├── baseline_sweep.yaml             # Baseline: balance, features, XGB params (20+ variants)
 │   ├── xlmr_sweep.yaml                 # XLM-R: preprocess, loss, LR, batch (23 variants)
+│   ├── xlmr_large_sweep.yaml           # XLM-R Large: parameter tuning and variants
 │   ├── embedding_sweep.yaml            # Embedding: models, classifiers, finetune (19 variants)
 │   ├── augment_sweep.yaml              # Augmentation: intensity, target, probability (7 variants)
 │   └── preprocess_alignment.yaml       # Preprocessing strategy alignment (6 variants)
@@ -34,6 +35,9 @@ python scripts/run_experiments.py experiments/manifests/baseline_sweep.yaml
 
 # XLM-R sweep (23 variants)
 python scripts/run_experiments.py experiments/manifests/xlmr_sweep.yaml
+
+# XLM-R Large sweep (ทดลองกับ xlm-roberta-large)
+python scripts/run_experiments.py experiments/manifests/xlmr_large_sweep.yaml
 
 # Embedding sweep (19 variants)
 python scripts/run_experiments.py experiments/manifests/embedding_sweep.yaml
@@ -87,10 +91,10 @@ python experiments/compare_results.py --export experiments/summary.csv
 
 ## Production (คนละโฟลเดอร์)
 
-| งาน | Path |
-|-----|------|
-| โมเดลที่ใช้จริง | `artifacts/baseline/`, `artifacts/xlmr/`, `artifacts/embedding/` |
-| Eval หลัง pipeline | `outputs/eval/eval_report.json` |
-| Dashboard HTML | `outputs/reports/eval_report_viz.html` |
+| งาน                | Path                                                             |
+| ------------------ | ---------------------------------------------------------------- |
+| โมเดลที่ใช้จริง    | `artifacts/baseline/`, `artifacts/xlmr/`, `artifacts/embedding/` |
+| Eval หลัง pipeline | `outputs/eval/eval_report.json`                                  |
+| Dashboard HTML     | `outputs/reports/eval_report_viz.html`                           |
 
 Config: [src/rris/config.py](../src/rris/config.py) · เริ่มต้น: [docs/getting-started.md](../docs/getting-started.md)
