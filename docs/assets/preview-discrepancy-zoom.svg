@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="100%" height="520" fill="none">
+  <defs>
+    <filter id="panelShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <style>
+    .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Plus Jakarta Sans", sans-serif; }
+    .font-mono { font-family: "JetBrains Mono", Consolas, Menlo, monospace; }
+  </style>
+
+  <!-- Container Box -->
+  <rect width="900" height="520" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Top App Window Bar -->
+  <rect width="900" height="42" rx="14" fill="#ffffff"/>
+  <line x1="0" y1="42" x2="900" y2="42" stroke="#e2e8f0" stroke-width="1"/>
+  <circle cx="24" cy="21" r="5.5" fill="#f43f5e"/>
+  <circle cx="42" cy="21" r="5.5" fill="#f59e0b"/>
+  <circle cx="60" cy="21" r="5.5" fill="#10b981"/>
+  <text x="450" y="26" fill="#475569" font-size="12" class="font-sans" font-weight="700" text-anchor="middle">Restaurant Detail &amp; Sentiment Discrepancy Intelligence</text>
+
+  <!-- Main Content Area -->
+  <g transform="translate(36, 62)">
+
+    <!-- Restaurant Header Card -->
+    <rect width="828" height="96" rx="14" fill="#ffffff" stroke="#e2e8f0" filter="url(#panelShadow)"/>
+    <g transform="translate(24, 20)">
+      <text x="0" y="22" fill="#0f172a" font-size="20" class="font-sans" font-weight="800">
+        Som Sak Seafood Express (สมศักดิ์ ปูดอง พรีเมียม)
+      </text>
+      <!-- Cuisine badge -->
+      <rect x="520" y="4" width="130" height="24" rx="12" fill="#e0f2fe" stroke="#bae6fd"/>
+      <text x="585" y="20" fill="#0284c7" font-size="10.5" class="font-sans" font-weight="800" text-anchor="middle">SEAFOOD &amp; THAI</text>
+
+      <text x="0" y="48" fill="#64748b" font-size="12" class="font-sans">
+        📍 104/1 Sukhumvit Soi 55, Thonglor, Watthana, Bangkok 10110
+      </text>
+      <text x="0" y="66" fill="#94a3b8" font-size="11" class="font-sans" font-style="italic">
+        "Popular seafood restaurant known for mud crab in fish sauce and spicy lime sauce."
+      </text>
+    </g>
+
+    <!-- Fraud Alert Banner -->
+    <g transform="translate(0, 112)">
+      <rect width="828" height="66" rx="14" fill="#fff1f2" stroke="#fecdd3"/>
+      <circle cx="36" cy="33" r="18" fill="#ffe4e6"/>
+      <text x="36" y="39" fill="#e11d48" font-size="16" class="font-sans" font-weight="900" text-anchor="middle">⚠️</text>
+      <text x="68" y="28" fill="#9f1239" font-size="13" class="font-sans" font-weight="800" letter-spacing="0.5">
+        SUSPICIOUS DISCREPANCY DETECTED (Δ &ge; 2.0★)
+      </text>
+      <text x="68" y="48" fill="#e11d48" font-size="11.5" class="font-sans">
+        Review text embeddings exhibit significant divergence from recorded star ratings. Deep NLP models predict negative sentiment despite 5★ logs.
+      </text>
+    </g>
+
+    <!-- Side-by-side Dual Rating Cards -->
+    <g transform="translate(0, 194)">
+      <!-- Left: Google User Rating Card -->
+      <rect width="402" height="130" rx="14" fill="#ffffff" stroke="#e2e8f0" filter="url(#panelShadow)"/>
+      <text x="24" y="30" fill="#94a3b8" font-size="11" class="font-sans" font-weight="800" letter-spacing="1">
+        GOOGLE USER RATING
+      </text>
+      <text x="24" y="78" fill="#d97706" font-size="44" class="font-sans" font-weight="900">4.7</text>
+      <text x="110" y="72" fill="#fbbf24" font-size="20">★★★★★</text>
+      <rect x="24" y="92" width="354" height="6" rx="3" fill="#fef3c7"/>
+      <rect x="24" y="92" width="332" height="6" rx="3" fill="#f59e0b"/>
+      <text x="24" y="116" fill="#64748b" font-size="10.5" class="font-sans">Based on raw platform submitted star logs</text>
+
+      <!-- Right: AI Expected Rating Card -->
+      <g transform="translate(426, 0)">
+        <rect width="402" height="130" rx="14" fill="#ffffff" stroke="#bae6fd" filter="url(#panelShadow)"/>
+        <text x="24" y="30" fill="#0284c7" font-size="11" class="font-sans" font-weight="800" letter-spacing="1">
+          AI EXPECTED SENTIMENT RATING
+        </text>
+        <text x="24" y="78" fill="#0284c7" font-size="44" class="font-sans" font-weight="900">2.1</text>
+        <text x="105" y="72" fill="#38bdf8" font-size="20">★★☆☆☆</text>
+        <rect x="24" y="92" width="354" height="6" rx="3" fill="#e0f2fe"/>
+        <rect x="24" y="92" width="148" height="6" rx="3" fill="#0284c7"/>
+        <text x="24" y="116" fill="#0284c7" font-size="10.5" class="font-sans font-weight="600">Softmax expectation computed across 5 star logits</text>
+      </g>
+    </g>
+
+    <!-- Bottom Stat Summary Bars -->
+    <g transform="translate(0, 340)">
+      <rect width="828" height="60" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+      <!-- Stat 1 -->
+      <g transform="translate(40, 16)">
+        <text x="0" y="16" fill="#0f172a" font-size="18" class="font-sans" font-weight="800">184</text>
+        <text x="0" y="32" fill="#64748b" font-size="10" class="font-sans" font-weight="700">SCORED REVIEWS</text>
+      </g>
+      <line x1="220" y1="12" x2="220" y2="48" stroke="#f1f5f9" stroke-width="1.5"/>
+      <!-- Stat 2 -->
+      <g transform="translate(260, 16)">
+        <text x="0" y="16" fill="#e11d48" font-size="18" class="font-sans" font-weight="800">42 (22.8%)</text>
+        <text x="0" y="32" fill="#e11d48" font-size="10" class="font-sans" font-weight="700">FLAGGED ANOMALIES</text>
+      </g>
+      <line x1="480" y1="12" x2="480" y2="48" stroke="#f1f5f9" stroke-width="1.5"/>
+      <!-- Stat 3 -->
+      <g transform="translate(520, 16)">
+        <text x="0" y="16" fill="#0f172a" font-size="18" class="font-sans" font-weight="800">+2.60 ★</text>
+        <text x="0" y="32" fill="#64748b" font-size="10" class="font-sans" font-weight="700">MAX DELTA DISCREPANCY</text>
+      </g>
+      <line x1="720" y1="12" x2="720" y2="48" stroke="#f1f5f9" stroke-width="1.5"/>
+      <!-- Stat 4 -->
+      <g transform="translate(745, 16)">
+        <text x="0" y="16" fill="#059669" font-size="18" class="font-sans" font-weight="800">High</text>
+        <text x="0" y="32" fill="#059669" font-size="10" class="font-sans" font-weight="700">CONFIDENCE</text>
+      </g>
+    </g>
+
+  </g>
+
+  <!-- Bottom Caption Badge -->
+  <g transform="translate(30, 474)">
+    <rect width="400" height="34" rx="8" fill="#0f172a" fill-opacity="0.92"/>
+    <text x="18" y="22" fill="#38bdf8" font-size="11.5" class="font-mono" font-weight="600">
+      FEATURE 02 · Sentiment Discrepancy &amp; Fraud Card
+    </text>
+  </g>
+</svg>
