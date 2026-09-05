@@ -1,0 +1,38 @@
+# experiments/manifests/preprocess_alignment.yaml
+# ==============================================================================
+# Preprocessing Strategy Alignment Test (ใช้กับ Baseline)
+# ==============================================================================
+# ทดสอบว่า preprocessing strategy ไหนเหมาะกับ Baseline TF-IDF มากที่สุด
+# เพราะ Baseline ใช้ Thai tokenizer + TF-IDF ซึ่งต่างจาก Transformer-based models
+model: baseline
+
+variants:
+  - name: prep_default
+    hypothesis: "Default preprocessing — standard normalization."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "default"
+
+  - name: prep_minimal
+    hypothesis: "Minimal — less aggressive, keep more original text."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "minimal"
+
+  - name: prep_aggressive
+    hypothesis: "Aggressive — heavy cleaning, may lose useful tokens."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "aggressive"
+
+  - name: prep_keep_digits
+    hypothesis: "Keep digits — numbers like prices may be useful features."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "keep_digits"
+
+  - name: prep_emoji_tag
+    hypothesis: "Emoji tag — preserve sentiment signals from emojis."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "emoji_tag"
+
+  - name: prep_segment
+    hypothesis: "Word segmentation — may help TF-IDF tokenizer."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "segment"

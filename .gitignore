@@ -106,10 +106,11 @@ artifacts/**/*
 reports/
 
 # Experimentation History & Logs (Ignore large data logs and outputs)
-experiments/**/*
-!experiments/**/*.py
-!experiments/**/*.md
-!experiments/**/.gitkeep
+# experiments/**/*
+# !experiments/**/*.py
+# !experiments/**/*.md
+# !experiments/**/.gitkeep
+# !experiments/**/docs
 
 outputs/
 *.log

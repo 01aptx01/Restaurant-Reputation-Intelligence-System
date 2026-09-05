@@ -1,0 +1,45 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "f1_best_combo_v1",
+  "hypothesis": "Combine best strategies: undersample + oversample + char + deep + slow.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_UNDERSAMPLE_STAR4_FRACTION": 0.6,
+    "BASELINE_OVERSAMPLE_FACTOR": 5,
+    "XGB_LOW_STAR_BOOST": 3.0,
+    "BASELINE_USE_CHAR_TFIDF": true,
+    "TFIDF_MAX_FEATURES": 10000,
+    "MAX_REVIEW_CHARS": 500,
+    "XGB_PARAMS": {
+      "max_depth": 5,
+      "eta": 0.02,
+      "reg_lambda": 5.0,
+      "subsample": 0.8
+    },
+    "XGB_ROUNDS": 1200,
+    "XGB_EARLY_STOPPING_ROUNDS": 60
+  },
+  "metrics": {
+    "mae": 0.6830417280946913,
+    "accuracy": 0.41228070175438597,
+    "f1_macro": 0.23476399932336767,
+    "f1_weighted": 0.33004149629393675,
+    "rmse": 0.8575283141489239,
+    "off_by_one_accuracy": 0.9415204678362573,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.11475409836065574,
+    "anomaly_rate": 0.029239766081871343,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.5,
+    "anomaly_f1": 0.6666666666666666,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.11475409836065574,
+      "3": 0.2131782945736434,
+      "4": 0.9048582995951417,
+      "5": 0.11688311688311688
+    }
+  },
+  "status": "ok",
+  "duration": 252.2
+}

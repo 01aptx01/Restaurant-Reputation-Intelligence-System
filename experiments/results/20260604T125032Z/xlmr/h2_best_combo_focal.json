@@ -1,0 +1,19 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "h2_best_combo_focal",
+  "hypothesis": "Best combo: focal + keep_digits + standard batch + boost.",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_USE_REGRESSION": false,
+    "XLMR_USE_FOCAL_LOSS": true,
+    "XLMR_FOCAL_GAMMA": 2.5,
+    "XLMR_PREPROCESS_STRATEGY": "keep_digits",
+    "XLMR_LOW_STAR_BOOST": 2.0,
+    "LEARNING_RATE": 2e-05,
+    "EPOCHS": 4,
+    "XLMR_EARLY_STOPPING_PATIENCE": 3
+  },
+  "status": "error",
+  "error": "shapes (58,1) and (5,) not aligned: 1 (dim 1) != 5 (dim 0)",
+  "duration": 132.5
+}

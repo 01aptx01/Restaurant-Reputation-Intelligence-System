@@ -1,0 +1,32 @@
+{
+  "manifest": "embedding_sweep.yaml",
+  "variant": "b1_preprocess_default",
+  "hypothesis": "Default preprocessing for embeddings.",
+  "model": "embedding",
+  "config_overrides": {
+    "XLMR_PREPROCESS_STRATEGY": "default"
+  },
+  "metrics": {
+    "mae": 0.5778695940971375,
+    "accuracy": 0.5182748538011696,
+    "f1_macro": 0.49488681122809125,
+    "f1_weighted": 0.49218345727452467,
+    "rmse": 0.7389737065790621,
+    "off_by_one_accuracy": 0.9627192982456141,
+    "recall_star_1": 0.6881720430107527,
+    "recall_star_2": 0.36065573770491804,
+    "anomaly_rate": 0.011695906432748537,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.3137254901960784,
+    "anomaly_f1": 0.47761194029850745,
+    "per_class_recall": {
+      "1": 0.6881720430107527,
+      "2": 0.36065573770491804,
+      "3": 0.3062015503875969,
+      "4": 0.8360323886639676,
+      "5": 0.28354978354978355
+    }
+  },
+  "status": "ok",
+  "duration": 417.8
+}

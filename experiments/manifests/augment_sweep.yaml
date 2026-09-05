@@ -1,0 +1,56 @@
+# experiments/manifests/augment_sweep.yaml
+# ==============================================================================
+# Data Augmentation Strategy Sweep (ใช้กับ Baseline เป็นหลัก)
+# ==============================================================================
+# ทดลองเปิด/ปิด augmentation, ปรับ target, ปรับ probability
+model: baseline
+
+variants:
+  - name: aug_disabled
+    hypothesis: "Ablation: no augmentation at all."
+    config:
+      AUGMENT_ENABLED: false
+
+  - name: aug_light_800
+    hypothesis: "Light augmentation: target only 800 per class."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 800
+      AUGMENT_TARGET_STARS: [1, 2, 3]
+
+  - name: aug_medium_1400
+    hypothesis: "Medium augmentation: current default (1400 per class)."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 1400
+      AUGMENT_TARGET_STARS: [1, 2, 3]
+
+  - name: aug_heavy_2500
+    hypothesis: "Heavy augmentation: 2500 target per class."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 2500
+      AUGMENT_TARGET_STARS: [1, 2, 3]
+
+  - name: aug_all_stars
+    hypothesis: "Augment all star classes including 4-5 to test effect."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 1400
+      AUGMENT_TARGET_STARS: [1, 2, 3, 4, 5]
+
+  - name: aug_high_synonym
+    hypothesis: "Higher synonym probability (50%) for more varied augmentation."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 1400
+      AUGMENT_SYNONYM_PROB: 0.5
+      AUGMENT_SHUFFLE_PROB: 0.3
+
+  - name: aug_low_synonym
+    hypothesis: "Lower synonym probability (15%) for minimal perturbation."
+    config:
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_COUNT: 1400
+      AUGMENT_SYNONYM_PROB: 0.15
+      AUGMENT_SHUFFLE_PROB: 0.1

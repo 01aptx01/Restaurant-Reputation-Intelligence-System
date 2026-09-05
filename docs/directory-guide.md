@@ -36,6 +36,8 @@ Restaurant-Reputation-Intelligence-System/
 | [training/baseline_optuna.md](training/baseline_optuna.md) | Optuna + 5-fold CV |
 | [training/xlmr.md](training/xlmr.md) | XLM-R fine-tune, AMP, Focal Loss |
 | [training/embedding.md](training/embedding.md) | E5 embedding + classifier |
+| [evaluation.md](evaluation.md) | เมตริก MAE, anomaly, model selection |
+| [experiments.md](experiments.md) | run_experiments.py + manifests |
 
 ## Scope โมเดล
 
@@ -120,5 +122,13 @@ Restaurant-Reputation-Intelligence-System/
 
 ## `experiments/`
 
-สคริปต์ทดลอง: `run_all_preprocess.py`, `xlmr_preprocess_ablation.py`, `test_preprocess.py`  
-ผลลัพธ์: `experiments/baseline/`, `experiments/xlmr/`
+| ไฟล์/โฟลเดอร์ | หน้าที่ |
+|--------------|---------|
+| `manifests/` | ไฟล์ YAML config สำหรับ run_experiments.py |
+| `run_all_preprocess.py` | รันทดลอง XLM-R ทุก strategy รวดเดียว |
+| `xlmr_preprocess_ablation.py` | ทดลอง XLM-R preprocessing |
+| `embedding_model_ablation.py` | เปรียบเทียบ embedding models (E5/BGE-M3/ฯลฯ) |
+| `baseline_feature_ablation.py` | ทดสอบ feature combinations แบบ CV |
+| `compare_results.py` | เปรียบเทียบผลทดลองจาก manifests (rank/export CSV) |
+| `test_preprocess.py` | ตรวจผลลัพธ์ preprocessing ตัวอย่าง |
+| `results/{run_id}/` | ผลลัพธ์ JSON จากการรัน manifests |

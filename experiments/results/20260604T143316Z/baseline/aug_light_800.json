@@ -1,0 +1,38 @@
+{
+  "manifest": "augment_sweep.yaml",
+  "variant": "aug_light_800",
+  "hypothesis": "Light augmentation: target only 800 per class.",
+  "model": "baseline",
+  "config_overrides": {
+    "AUGMENT_ENABLED": true,
+    "AUGMENT_TARGET_COUNT": 800,
+    "AUGMENT_TARGET_STARS": [
+      1,
+      2,
+      3
+    ]
+  },
+  "metrics": {
+    "mae": 0.6483906530030017,
+    "accuracy": 0.44956140350877194,
+    "f1_macro": 0.4149142028049891,
+    "f1_weighted": 0.4443933024962251,
+    "rmse": 0.8235564861532402,
+    "off_by_one_accuracy": 0.9276315789473685,
+    "recall_star_1": 0.3978494623655914,
+    "recall_star_2": 0.2459016393442623,
+    "anomaly_rate": 0.01608187134502924,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.2222222222222222,
+    "anomaly_f1": 0.36363636363636365,
+    "per_class_recall": {
+      "1": 0.3978494623655914,
+      "2": 0.2459016393442623,
+      "3": 0.4496124031007752,
+      "4": 0.6295546558704453,
+      "5": 0.2943722943722944
+    }
+  },
+  "status": "ok",
+  "duration": 110.8
+}

@@ -1,0 +1,155 @@
+{
+  "run_id": "20260604T001115Z",
+  "manifest": "baseline_sweep.yaml",
+  "model": "baseline",
+  "total_time_sec": 2592.6,
+  "variants": [
+    {
+      "variant": "v0_current_production",
+      "status": "ok",
+      "mae": 0.6886433236736801,
+      "duration": 144.9,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\v0_current_production.json"
+    },
+    {
+      "variant": "a1_oversample3_no_weight",
+      "status": "ok",
+      "mae": 0.6858916801757124,
+      "duration": 165.2,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\a1_oversample3_no_weight.json"
+    },
+    {
+      "variant": "a2_oversample8_boost4",
+      "status": "ok",
+      "mae": 0.68832431531425,
+      "duration": 153.2,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\a2_oversample8_boost4.json"
+    },
+    {
+      "variant": "a3_undersample4_50",
+      "status": "ok",
+      "mae": 0.6926333404838512,
+      "duration": 142.1,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\a3_undersample4_50.json"
+    },
+    {
+      "variant": "a4_no_oversample_weight_only",
+      "status": "ok",
+      "mae": 0.695290081203399,
+      "duration": 171.7,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\a4_no_oversample_weight_only.json"
+    },
+    {
+      "variant": "b1_tfidf_12k_bigram",
+      "status": "error",
+      "mae": null,
+      "duration": 8.7,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\b1_tfidf_12k_bigram.json"
+    },
+    {
+      "variant": "b2_tfidf_5k_trigram",
+      "status": "error",
+      "mae": null,
+      "duration": 8.7,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\b2_tfidf_5k_trigram.json"
+    },
+    {
+      "variant": "b3_lsa_300",
+      "status": "ok",
+      "mae": 0.6959293032143904,
+      "duration": 66.1,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\b3_lsa_300.json"
+    },
+    {
+      "variant": "b4_lsa_500_no_char",
+      "status": "ok",
+      "mae": 0.6756995224686599,
+      "duration": 70.4,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\b4_lsa_500_no_char.json"
+    },
+    {
+      "variant": "b5_char_only_6k",
+      "status": "error",
+      "mae": null,
+      "duration": 9.0,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\b5_char_only_6k.json"
+    },
+    {
+      "variant": "b6_no_extra_features",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 118.0,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\b6_no_extra_features.json"
+    },
+    {
+      "variant": "c1_shallow_strong_reg",
+      "status": "ok",
+      "mae": 0.6886433236736801,
+      "duration": 113.0,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\c1_shallow_strong_reg.json"
+    },
+    {
+      "variant": "c2_deep_fast",
+      "status": "ok",
+      "mae": 0.6764978766441345,
+      "duration": 127.3,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\c2_deep_fast.json"
+    },
+    {
+      "variant": "c3_many_rounds_slow",
+      "status": "ok",
+      "mae": 0.6886433236736801,
+      "duration": 226.8,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\c3_many_rounds_slow.json"
+    },
+    {
+      "variant": "c4_regression_mode",
+      "status": "error",
+      "mae": null,
+      "duration": 77.1,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\c4_regression_mode.json"
+    },
+    {
+      "variant": "d1_trunc200",
+      "status": "ok",
+      "mae": 0.7322865097629995,
+      "duration": 120.0,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\d1_trunc200.json"
+    },
+    {
+      "variant": "d2_trunc1000",
+      "status": "ok",
+      "mae": 0.6852902416823077,
+      "duration": 143.2,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\d2_trunc1000.json"
+    },
+    {
+      "variant": "e1_augment_target2000",
+      "status": "ok",
+      "mae": 0.6898313832116274,
+      "duration": 178.0,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\e1_augment_target2000.json"
+    },
+    {
+      "variant": "e2_no_augment",
+      "status": "ok",
+      "mae": 0.6886161545291355,
+      "duration": 129.3,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\e2_no_augment.json"
+    },
+    {
+      "variant": "f1_best_combo_v1",
+      "status": "ok",
+      "mae": 0.6830417280946913,
+      "duration": 252.2,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\f1_best_combo_v1.json"
+    },
+    {
+      "variant": "f2_best_combo_v2",
+      "status": "ok",
+      "mae": 0.680055816252255,
+      "duration": 167.9,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T001115Z\\baseline\\f2_best_combo_v2.json"
+    }
+  ]
+}

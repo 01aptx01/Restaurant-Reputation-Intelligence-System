@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
-# ไฟล์ train_baseline_optuna.py: สคริปต์ขั้นสูงสำหรับการค้นหาพารามิเตอร์ที่ดีที่สุด (Hyperparameter Optimization)
-# ทำงานด้วย Optuna แบบ Bayesian Search ผสานกับ Stratified K-Fold Cross Validation (5 พับ)
-# ครอบคลุมการแข่งขันระหว่าง XGBoost, Logistic Regression, Linear SVM และ Random Forest
+"""Optuna hyperparameter search for baseline with full feature pipeline and MAE objective."""
+
+from __future__ import annotations
 
 import json
 import os
 import sys
 
-import joblib
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import f1_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, mean_absolute_error
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from scipy.sparse import hstack
+from sklearn.svm import LinearSVC
 import xgboost as xgb
 
 try:
@@ -29,63 +26,59 @@ except ImportError:
 
 from rris import config
 from rris import utils
+from rris.data.augmentation import apply_train_augmentation
+from rris.data.normalize import BASELINE_PREPROCESS_STRATEGY
+from rris.evaluation.selection import classifier_val_mae
+from rris.inference.common import expected_rating_from_probs
+from rris.training.baseline import fit_vectorizer_and_features, save_artifacts
 
-def main():
+
+def _fold_mae(
+    clf,
+    X_val,
+    y_val_stars: np.ndarray,
+    classifier_name: str,
+) -> float:
+    if classifier_name == "xgboost" and hasattr(clf, "predict_proba"):
+        return classifier_val_mae(clf, X_val, y_val_stars)
+    if classifier_name == "svm":
+        preds = clf.predict(X_val)
+        return float(mean_absolute_error(y_val_stars, preds.astype(np.float64)))
+    return classifier_val_mae(clf, X_val, y_val_stars)
+
+
+def main() -> None:
     if optuna is None:
         print("Optuna is not installed. Please run: pip install optuna", file=sys.stderr)
         sys.exit(1)
 
-    print("--- 🌟 Advanced Optuna K-Fold Optimization for Baseline ---")
+    print("--- Advanced Optuna K-Fold Optimization for Baseline (MAE objective) ---")
 
-    # 1. โหลดข้อมูล
-    print("Loading data...")
     df = utils.load_and_standardize_data(config.WONGNAI_TRAIN_PATH)
-    df, _ = utils.clean_review_dataframe(df, min_text_length=config.MIN_TEXT_LENGTH, drop_duplicates=True)
-    
-    # ตัดความยาวตัวอักษรให้ตรงกับตอน Inference เพื่อป้องกัน Train-Test Mismatch
+    df, _ = utils.clean_review_dataframe(
+        df,
+        min_text_length=config.MIN_TEXT_LENGTH,
+        drop_duplicates=True,
+    )
     df = utils.apply_text_truncation(df, config.MAX_REVIEW_CHARS)
-    
-    # 2. แบ่ง Holdout Set ออก 20% สำหรับทับสอบรอบสุดท้ายแบบไม่เคยเห็นหน้ากันมาก่อน
+
     train_df, holdout_df = train_test_split(
         df,
         test_size=config.HOLDOUT_FRACTION,
         random_state=config.RANDOM_STATE,
         stratify=df["user_rating"],
     )
-    
-    print(f"Train/CV Size: {len(train_df)}, Holdout Size: {len(holdout_df)}")
-    
-    # 3. เตรียม TF-IDF (ฟิตเฉพาะบน Train/CV เพื่อป้องกัน Data Leakage ไป Holdout)
-    print("Extracting TF-IDF Features...")
-    word_vec = TfidfVectorizer(
-        max_features=config.TFIDF_MAX_FEATURES,
-        ngram_range=config.TFIDF_NGRAM_RANGE,
-        min_df=config.TFIDF_MIN_DF,
-        max_df=config.TFIDF_MAX_DF,
-    )
-    X_train_word = word_vec.fit_transform(train_df["text"])
-    
-    char_vec = None
-    X_train_char = None
-    if config.BASELINE_USE_CHAR_TFIDF:
-        char_vec = TfidfVectorizer(
-            analyzer="char",
-            max_features=config.BASELINE_CHAR_MAX_FEATURES,
-            ngram_range=config.BASELINE_CHAR_NGRAM_RANGE,
-        )
-        X_train_char = char_vec.fit_transform(train_df["text"])
-        X_train_features = hstack([X_train_word, X_train_char], format="csr")
-    else:
-        X_train_features = X_train_word
+    train_df = utils.prepare_baseline_train_df(train_df)
+    holdout_df = utils.apply_text_truncation(holdout_df, config.MAX_REVIEW_CHARS)
+    y_train_stars = train_df["user_rating"].values.astype(int)
 
-    y_train = train_df["user_rating"].values
-    
-    # 4. ฟังก์ชันเป้าหมายของ Optuna (Objective Function)
-    def objective(trial):
-        # ให้ Optuna เลือกอัลกอริทึม
-        classifier_name = trial.suggest_categorical("classifier", ["xgboost", "logistic", "svm", "random_forest"])
-        
-        # ค้นหาพารามิเตอร์ที่เหมาะสมกับแต่ละอัลกอริทึม
+    print(f"Train/CV Size: {len(train_df)}, Holdout Size: {len(holdout_df)}")
+
+    def objective(trial: optuna.Trial) -> float:
+        classifier_name = trial.suggest_categorical(
+            "classifier", ["xgboost", "logistic", "svm", "random_forest"]
+        )
+
         if classifier_name == "xgboost":
             params = {
                 "max_depth": trial.suggest_int("max_depth", 3, 9),
@@ -98,145 +91,203 @@ def main():
                 "num_class": 5,
                 "tree_method": "hist",
                 "device": config.XGB_DEVICE,
-                "random_state": config.RANDOM_STATE
+                "random_state": config.RANDOM_STATE,
             }
-            clf = xgb.XGBClassifier(**params)
-            
         elif classifier_name == "logistic":
-            C = trial.suggest_float("C", 1e-3, 10.0, log=True)
-            clf = LogisticRegression(C=C, class_weight='balanced', max_iter=1000, n_jobs=-1, random_state=config.RANDOM_STATE)
-            
+            params = {"C": trial.suggest_float("C", 1e-3, 10.0, log=True)}
         elif classifier_name == "svm":
-            C = trial.suggest_float("C", 1e-3, 10.0, log=True)
-            svm_base = LinearSVC(C=C, class_weight='balanced', dual=False, max_iter=1000, random_state=config.RANDOM_STATE)
-            # ไม่ใช้ CalibratedClassifierCV ในระหว่าง CV เพื่อความรวดเร็ว
-            clf = svm_base
-            
-        elif classifier_name == "random_forest":
+            params = {"C": trial.suggest_float("C", 1e-3, 10.0, log=True)}
+        else:
             params = {
                 "n_estimators": trial.suggest_int("n_estimators", 50, 300, step=50),
                 "max_depth": trial.suggest_int("max_depth", 10, 50),
-                "min_samples_split": trial.suggest_int("min_samples_split", 2, 10)
+                "min_samples_split": trial.suggest_int("min_samples_split", 2, 10),
             }
-            clf = RandomForestClassifier(**params, class_weight='balanced', n_jobs=-1, random_state=config.RANDOM_STATE)
 
-        # 5. ประเมินผลด้วย 5-Fold Stratified K-Fold
-        skf = StratifiedKFold(n_splits=config.BASELINE_KFOLD, shuffle=True, random_state=config.RANDOM_STATE)
-        fold_f1_scores = []
-        
-        for train_idx, val_idx in skf.split(X_train_features, y_train):
-            X_fold_train, X_fold_val = X_train_features[train_idx], X_train_features[val_idx]
-            y_fold_train, y_fold_val = y_train[train_idx], y_train[val_idx]
-            
-            # การถ่วงน้ำหนัก (ถ้าตั้งไว้)
+        skf = StratifiedKFold(
+            n_splits=config.BASELINE_KFOLD,
+            shuffle=True,
+            random_state=config.RANDOM_STATE,
+        )
+        fold_maes: list[float] = []
+
+        for train_idx, val_idx in skf.split(train_df, y_train_stars):
+            fold_train = train_df.iloc[train_idx].reset_index(drop=True)
+            fold_val = train_df.iloc[val_idx].reset_index(drop=True)
+            _, _, _, X_fold_train, X_fold_val, _ = fit_vectorizer_and_features(
+                fold_train, fold_val
+            )
+            y_fold_train = fold_train["user_rating"].values.astype(int)
+            y_fold_val = fold_val["user_rating"].values.astype(int)
+
             sample_weights = None
             if config.XGB_USE_SAMPLE_WEIGHT:
-                class_weights = utils.compute_class_weights(y_fold_train, low_star_boost=config.XGB_LOW_STAR_BOOST)
-                sample_weights = utils.compute_sample_weights_from_ratings(y_fold_train, class_weights)
-            
-            # ถ้าเป็น XGBoost จะต้องปรับ y ให้เริ่มจาก 0-4
-            if classifier_name == "xgboost":
-                clf.fit(X_fold_train, y_fold_train - 1, sample_weight=sample_weights, verbose=False)
-                preds = clf.predict(X_fold_val) + 1
-            else:
-                clf.fit(X_fold_train, y_fold_train, sample_weight=sample_weights)
-                preds = clf.predict(X_fold_val)
-                
-            fold_f1 = f1_score(y_fold_val, preds, average='macro')
-            fold_f1_scores.append(fold_f1)
-            
-        return np.mean(fold_f1_scores)
+                class_weights = utils.compute_class_weights(
+                    y_fold_train, low_star_boost=config.XGB_LOW_STAR_BOOST
+                )
+                sample_weights = utils.compute_sample_weights_from_ratings(
+                    y_fold_train, class_weights
+                )
 
-    # 6. เริ่มกระบวนการ Optuna
-    print(f"\n--- Starting Optuna Optimization ({config.BASELINE_KFOLD}-Fold CV) ---")
+            if classifier_name == "xgboost":
+                clf = xgb.XGBClassifier(**params)
+                clf.fit(
+                    X_fold_train,
+                    y_fold_train - 1,
+                    sample_weight=sample_weights,
+                    verbose=False,
+                )
+            elif classifier_name == "logistic":
+                clf = LogisticRegression(
+                    C=params["C"],
+                    class_weight="balanced",
+                    max_iter=1000,
+                    n_jobs=-1,
+                    random_state=config.RANDOM_STATE,
+                )
+                clf.fit(X_fold_train, y_fold_train, sample_weight=sample_weights)
+            elif classifier_name == "svm":
+                clf = LinearSVC(
+                    C=params["C"],
+                    class_weight="balanced",
+                    dual=False,
+                    max_iter=1000,
+                    random_state=config.RANDOM_STATE,
+                )
+                clf.fit(X_fold_train, y_fold_train, sample_weight=sample_weights)
+            else:
+                clf = RandomForestClassifier(
+                    **params,
+                    class_weight="balanced",
+                    n_jobs=-1,
+                    random_state=config.RANDOM_STATE,
+                )
+                clf.fit(X_fold_train, y_fold_train, sample_weight=sample_weights)
+
+            fold_maes.append(_fold_mae(clf, X_fold_val, y_fold_val, classifier_name))
+
+        return float(np.mean(fold_maes))
+
+    print(f"\n--- Starting Optuna Optimization ({config.BASELINE_KFOLD}-Fold CV, minimize MAE) ---")
     sampler = TPESampler(seed=config.RANDOM_STATE)
-    study = optuna.create_study(direction="maximize", sampler=sampler, study_name="baseline_optimization")
-    
-    # รัน 30 Trials (สามารถเพิ่มได้ถ้ามีเวลา)
+    study = optuna.create_study(
+        direction="minimize",
+        sampler=sampler,
+        study_name="baseline_mae_optimization",
+    )
     study.optimize(objective, n_trials=30, show_progress_bar=True)
-    
-    print("\n" + "="*50)
-    print("🏆 OPTIMIZATION FINISHED")
-    print(f"Best Trial: F1-Macro = {study.best_value:.4f}")
+
+    print("\n" + "=" * 50)
+    print("OPTIMIZATION FINISHED")
+    print(f"Best Trial: Val MAE = {study.best_value:.4f}")
     print(f"Best Params: {study.best_params}")
-    print("="*50)
-    
-    # 7. เทรนโมเดลที่ดีที่สุดด้วยข้อมูล Train ทั้งหมดเพื่อทดสอบกับ Holdout Set
+    print("=" * 50)
+
     print("\n--- Training Best Model on Full CV Set ---")
-    best_params = study.best_params
+    best_params = dict(study.best_params)
     best_clf_name = best_params.pop("classifier")
-    
+
+    vectorizer, char_vectorizer, svd, X_train, X_hold, explained = fit_vectorizer_and_features(
+        train_df, holdout_df
+    )
+    y_train = train_df["user_rating"].values.astype(int)
+    y_holdout = holdout_df["user_rating"].values.astype(int)
+
     sample_weights = None
     if config.XGB_USE_SAMPLE_WEIGHT:
-        class_weights = utils.compute_class_weights(y_train, low_star_boost=config.XGB_LOW_STAR_BOOST)
+        class_weights = utils.compute_class_weights(
+            y_train, low_star_boost=config.XGB_LOW_STAR_BOOST
+        )
         sample_weights = utils.compute_sample_weights_from_ratings(y_train, class_weights)
-        
+
     final_clf = None
     if best_clf_name == "xgboost":
-        best_params.update({"objective": "multi:softprob", "num_class": 5, "tree_method": "hist", "device": config.XGB_DEVICE, "random_state": config.RANDOM_STATE})
+        best_params.update(
+            {
+                "objective": "multi:softprob",
+                "num_class": 5,
+                "tree_method": "hist",
+                "device": config.XGB_DEVICE,
+                "random_state": config.RANDOM_STATE,
+            }
+        )
         final_clf = xgb.XGBClassifier(**best_params)
-        final_clf.fit(X_train_features, y_train - 1, sample_weight=sample_weights)
+        final_clf.fit(X_train, y_train - 1, sample_weight=sample_weights)
+        hold_preds = expected_rating_from_probs(final_clf.predict_proba(X_hold))
     elif best_clf_name == "logistic":
-        final_clf = LogisticRegression(C=best_params["C"], class_weight='balanced', max_iter=1000, n_jobs=-1, random_state=config.RANDOM_STATE)
-        final_clf.fit(X_train_features, y_train, sample_weight=sample_weights)
+        final_clf = LogisticRegression(
+            C=best_params["C"],
+            class_weight="balanced",
+            max_iter=1000,
+            n_jobs=-1,
+            random_state=config.RANDOM_STATE,
+        )
+        final_clf.fit(X_train, y_train, sample_weight=sample_weights)
+        hold_preds = expected_rating_from_probs(final_clf.predict_proba(X_hold))
     elif best_clf_name == "svm":
-        svm_base = LinearSVC(C=best_params["C"], class_weight='balanced', dual=False, max_iter=1000, random_state=config.RANDOM_STATE)
-        svm_base.fit(X_train_features, y_train, sample_weight=sample_weights)
-        final_clf = CalibratedClassifierCV(svm_base, cv='prefit')
-        final_clf.fit(X_train_features, y_train)
-    elif best_clf_name == "random_forest":
-        final_clf = RandomForestClassifier(**best_params, class_weight='balanced', n_jobs=-1, random_state=config.RANDOM_STATE)
-        final_clf.fit(X_train_features, y_train, sample_weight=sample_weights)
-        
-    # 8. ประเมินผลบน Holdout Set สุดท้าย (เพื่อความโปร่งใส)
-    X_hold_word = word_vec.transform(holdout_df["text"])
-    if X_train_char is not None:
-        X_hold_char = char_vec.transform(holdout_df["text"])
-        X_hold_features = hstack([X_hold_word, X_hold_char], format="csr")
+        svm_base = LinearSVC(
+            C=best_params["C"],
+            class_weight="balanced",
+            dual=False,
+            max_iter=1000,
+            random_state=config.RANDOM_STATE,
+        )
+        svm_base.fit(X_train, y_train, sample_weight=sample_weights)
+        final_clf = CalibratedClassifierCV(svm_base, cv="prefit")
+        final_clf.fit(X_train, y_train)
+        hold_preds = expected_rating_from_probs(final_clf.predict_proba(X_hold))
     else:
-        X_hold_features = X_hold_word
-        
-    y_holdout = holdout_df["user_rating"].values
-    
-    if best_clf_name == "xgboost":
-        final_preds = final_clf.predict(X_hold_features) + 1
-    else:
-        final_preds = final_clf.predict(X_hold_features)
-        
-    final_f1 = f1_score(y_holdout, final_preds, average='macro')
-    print(f"\n🎯 Holdout Set F1-Macro (Unseen Data): {final_f1:.4f}")
-    
-    # 9. บันทึก Artifacts แทนที่ Baseline เดิม
-    print("\n--- Saving Artifacts ---")
-    os.makedirs(config.BASELINE_ARTIFACTS_DIR, exist_ok=True)
-    joblib.dump(word_vec, config.TFIDF_VECTORIZER_PATH)
-    if char_vec:
-        joblib.dump(char_vec, config.CHAR_TFIDF_VECTORIZER_PATH)
-        
-    if best_clf_name == "xgboost":
-        # ดึง Booster ดิบออกมาเซฟ
-        final_clf.get_booster().save_model(config.XGB_MODEL_PATH)
-    else:
-        sklearn_model_path = os.path.join(config.BASELINE_ARTIFACTS_DIR, "sklearn_model.joblib")
-        joblib.dump(final_clf, sklearn_model_path)
-        
-    # บันทึก Metadata
+        final_clf = RandomForestClassifier(
+            **best_params,
+            class_weight="balanced",
+            n_jobs=-1,
+            random_state=config.RANDOM_STATE,
+        )
+        final_clf.fit(X_train, y_train, sample_weight=sample_weights)
+        hold_preds = expected_rating_from_probs(final_clf.predict_proba(X_hold))
+
+    hold_mae = float(mean_absolute_error(y_holdout, hold_preds))
+    hold_f1 = float(
+        f1_score(
+            y_holdout,
+            np.clip(np.round(hold_preds), 1, 5).astype(int),
+            average="macro",
+        )
+    )
+    print(f"\nHoldout MAE (Unseen Data): {hold_mae:.4f} | F1-Macro: {hold_f1:.4f}")
+
+    model_type_map = {
+        "xgboost": "xgboost",
+        "logistic": "logistic_regression",
+        "svm": "linear_svm",
+        "random_forest": "random_forest",
+    }
+    best_model_type = model_type_map[best_clf_name]
+
     meta = {
-        "best_model_type": "xgboost" if best_clf_name == "xgboost" else best_clf_name.replace("logistic", "logistic_regression").replace("svm", "linear_svm"),
-        "best_f1_macro": final_f1,
-        "optuna_cv_f1": study.best_value,
+        "best_model_type": best_model_type,
+        "best_val_mae": hold_mae,
+        "best_f1_macro": hold_f1,
+        "preprocess_strategy": BASELINE_PREPROCESS_STRATEGY,
+        "optuna_cv_mae": study.best_value,
         "best_params": study.best_params,
         "use_char_tfidf": config.BASELINE_USE_CHAR_TFIDF,
-        "use_extra_features": False,
-        "use_lsa": False,
+        "use_extra_features": config.BASELINE_USE_EXTRA_FEATURES,
+        "use_lsa": config.BASELINE_USE_LSA,
         "use_regression": False,
         "use_3class": False,
-        "max_review_chars": config.MAX_REVIEW_CHARS
+        "max_review_chars": config.MAX_REVIEW_CHARS,
+        "explained_variance": explained,
     }
-    with open(config.BASELINE_META_PATH, "w", encoding="utf-8") as f:
-        json.dump(meta, f, indent=2)
-        
-    print(f"Deployment artifacts updated with the Optuna Champion: {best_clf_name.upper()}!")
+
+    save_model = final_clf
+    if best_clf_name == "xgboost":
+        save_model = final_clf.get_booster()
+
+    print("\n--- Saving Artifacts ---")
+    save_artifacts(vectorizer, char_vectorizer, svd, save_model, meta)
+    print(f"Deployment artifacts updated with Optuna champion: {best_clf_name.upper()}!")
+
 
 if __name__ == "__main__":
     main()

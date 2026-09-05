@@ -1,0 +1,50 @@
+{
+  "run_id": "20260604T145728Z",
+  "manifest": "preprocess_alignment.yaml",
+  "model": "baseline",
+  "total_time_sec": 779.5,
+  "variants": [
+    {
+      "variant": "prep_default",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 134.3,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T145728Z\\baseline\\prep_default.json"
+    },
+    {
+      "variant": "prep_minimal",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 133.4,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T145728Z\\baseline\\prep_minimal.json"
+    },
+    {
+      "variant": "prep_aggressive",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 131.0,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T145728Z\\baseline\\prep_aggressive.json"
+    },
+    {
+      "variant": "prep_keep_digits",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 120.2,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T145728Z\\baseline\\prep_keep_digits.json"
+    },
+    {
+      "variant": "prep_emoji_tag",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 117.9,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T145728Z\\baseline\\prep_emoji_tag.json"
+    },
+    {
+      "variant": "prep_segment",
+      "status": "ok",
+      "mae": 0.6427907434668721,
+      "duration": 142.7,
+      "path": "F:\\ComSci\\Coding\\Project\\Restaurant-Reputation-Intelligence-System\\experiments\\results\\20260604T145728Z\\baseline\\prep_segment.json"
+    }
+  ]
+}

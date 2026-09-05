@@ -1,0 +1,14 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "b1_classification_focal",
+  "hypothesis": "Focal Loss focuses on hard-to-classify examples (rare stars).",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_USE_REGRESSION": false,
+    "XLMR_USE_FOCAL_LOSS": true,
+    "XLMR_FOCAL_GAMMA": 2.0
+  },
+  "status": "error",
+  "error": "shapes (58,1) and (5,) not aligned: 1 (dim 1) != 5 (dim 0)",
+  "duration": 97.7
+}

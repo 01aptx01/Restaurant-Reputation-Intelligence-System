@@ -3,6 +3,8 @@
 
 import os # เรียกใช้งานระบบจัดเตรียมไฟล์ของเครื่อง
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # บรรเทาการแบ่งส่วนแรมของการ์ดจอ (VRAM fragmentation) ป้องกัน CUDA OOM
+import json
+import argparse
 import numpy as np    # ไลบรารีการคำนวณเวกเตอร์และตัวเลข
 
 import torch          # ไลบรารีหลักประมวลผล Tensor และโมเดลของ PyTorch
@@ -14,6 +16,8 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_
 
 from rris import config # นำเข้าค่าคงที่และการตั้งค่าทางคณิตศาสตร์หลัก
 from rris import utils  # นำเข้าเครื่องมือทำความสะอาดและตรวจสอบข้อมูลหลัก
+from rris.data.augmentation import apply_train_augmentation
+from rris.inference.common import expected_rating_from_probs
 
 
 class ReviewDataset(Dataset):
@@ -187,9 +191,81 @@ def run_epoch(
     return total_loss / max(total, 1), correct / max(total, 1)
 
 
-def main() -> None:
+def evaluate_loader_mae(
+    model,
+    loader,
+    device,
+    *,
+    use_amp: bool = False,
+    use_regression: bool = False,
+    use_3class: bool = False,
+) -> float:
+    """Compute mean absolute error (stars 1-5) on a DataLoader."""
+    model.eval()
+    expected_parts: list[np.ndarray] = []
+    true_parts: list[np.ndarray] = []
+    with torch.no_grad():
+        for batch in loader:
+            input_ids = batch["input_ids"].to(device)
+            attention_mask = batch["attention_mask"].to(device)
+            labels = batch["labels"]
+            amp_enabled = use_amp and device is not None and device.type == "cuda"
+            with torch.autocast(device_type=device.type, enabled=amp_enabled):
+                logits = model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                ).logits
+            if use_regression or logits.size(-1) == 1:
+                expected_parts.append(logits.squeeze(-1).cpu().numpy())
+            elif use_3class:
+                probs = torch.softmax(logits, dim=-1).cpu().numpy()
+                expected_parts.append(
+                    utils.class3_to_expected_star(np.argmax(probs, axis=1))
+                )
+            else:
+                probs = torch.softmax(logits, dim=-1).cpu().numpy()
+                expected_parts.append(expected_rating_from_probs(probs))
+
+            if use_regression:
+                true_parts.append(labels.cpu().numpy().astype(np.float64))
+            elif use_3class:
+                true_parts.append(
+                    utils.class3_to_expected_star(labels.cpu().numpy().astype(int))
+                )
+            else:
+                true_parts.append(labels.cpu().numpy().astype(np.float64) + 1.0)
+
+    expected = np.concatenate(expected_parts)
+    true = np.concatenate(true_parts)
+    return float(np.mean(np.abs(expected - true)))
+
+
+def _log_training_device(device: torch.device) -> None:
+    """Print resolved device and a clear hint when CUDA exists but training falls back to CPU."""
+    print(f"PyTorch {torch.__version__} | TORCH_DEVICE={config.TORCH_DEVICE}")
+    if device.type == "cuda":
+        idx = torch.cuda.current_device()
+        print(f"Using GPU: {torch.cuda.get_device_name(idx)} (cuda:{idx})")
+        return
+    if torch.cuda.is_available():
+        print(f"WARNING: CUDA is visible but training uses CPU. {config.cuda_device_hint()}")
+    else:
+        print("Training on CPU (no CUDA device reported by PyTorch).")
+
+
+def main(use_large: bool = False) -> None:
     """แกนโปรแกรมควบคุมการจูนโมเดลประมวลผลข้อความ NLP ภาษาไทยระดับสูง"""
+    if use_large:
+        print(">>> RUNNING IN LARGE MODEL MODE <<<")
+        config.XLMR_MODEL_NAME = config.XLMR_LARGE_MODEL_NAME
+        config.XLMR_ARTIFACTS_DIR = config.XLMR_LARGE_ARTIFACTS_DIR
+        config.XLMR_META_PATH = config.XLMR_LARGE_META_PATH
+        config.BATCH_SIZE = config.XLMR_LARGE_BATCH_SIZE
+        config.XLMR_GRAD_ACCUM_STEPS = config.XLMR_LARGE_GRAD_ACCUM_STEPS
+        config.XLMR_GRADIENT_CHECKPOINTING = config.XLMR_LARGE_GRADIENT_CHECKPOINTING
+
     device = torch.device(config.TORCH_DEVICE) # ดึงพิกัดอุปกรณ์ประมวลผลหลัก (ชิป CUDA)
+    _log_training_device(device)
     
     # กำหนดจำนวนคลาสตามโหมดการทำงาน (Regression, 3-class, หรือ 5-class)
     use_regression = getattr(config, "XLMR_USE_REGRESSION", False)
@@ -218,6 +294,20 @@ def main() -> None:
         model.gradient_checkpointing_enable() # เปิดระบบฝากผลเกรเดียนต์ย้อนกลับเซฟแรม
         model.config.use_cache = False         # ปิดระบบแคชคำตอบช่วงกลางที่ไม่ได้ใช้งานย้อนกลับ
         
+    # 2.5 แช่แข็งโครงสร้าง (Freeze Weights) เพื่อลดภาระการ์ดจอและรักษากลุ่มคำดั้งเดิม
+    freeze_embeddings = getattr(config, "XLMR_FREEZE_EMBEDDINGS", False)
+    if freeze_embeddings:
+        print("  > Freezing word embeddings...")
+        for param in model.roberta.embeddings.parameters():
+            param.requires_grad = False
+            
+    freeze_layers = getattr(config, "XLMR_FREEZE_LAYERS", 0)
+    if freeze_layers > 0:
+        print(f"  > Freezing bottom {freeze_layers} transformer layers...")
+        for layer in model.roberta.encoder.layer[:freeze_layers]:
+            for param in layer.parameters():
+                param.requires_grad = False
+        
     tokenizer = AutoTokenizer.from_pretrained(config.XLMR_MODEL_NAME) # โหลดโทเคนไนเซอร์คู่บารมีของ XLM-R
 
     # 3. โหลดและจัดโครงสร้างข้อมูลข้อความผ่านกลยุทธ์ตัวทำความสะอาดตามที่กำหนดใน Config
@@ -245,19 +335,7 @@ def main() -> None:
         stratify=df["user_rating"],
     )
 
-    # ==========================================
-    # 4.5 Data Augmentation: ขยายข้อมูลดาวน้อยด้วยเทคนิค NLP (Synonym + Shuffle)
-    # ==========================================
-    if getattr(config, "AUGMENT_ENABLED", False):
-        print("\n--- Step 4.5: Data Augmentation (NLP-aware) ---")
-        df_train = utils.augment_minority_classes(
-            df_train,
-            target_stars=config.AUGMENT_TARGET_STARS,
-            target_count=config.AUGMENT_TARGET_COUNT,
-            synonym_prob=config.AUGMENT_SYNONYM_PROB,
-            shuffle_prob=config.AUGMENT_SHUFFLE_PROB,
-            random_state=config.AUGMENT_RANDOM_STATE,
-        )
+    df_train = apply_train_augmentation(df_train)
 
     # ปรับระดับกลุ่มเป้าหมายตามโหมด
     if use_3class:
@@ -315,15 +393,18 @@ def main() -> None:
     )
 
     # 7. สร้าง DataLoader สำหรับลูปสับเปลี่ยนข้อมูลและสุ่มสับแถว (Shuffle=True สำหรับชุดสอนเท่านั้น)
+    use_cuda = device.type == "cuda"
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
+        pin_memory=use_cuda,
     )
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
+        pin_memory=use_cuda,
     )
 
     # 8. นิยามตัวปรับค่าน้ำหนักสุดล้ำ AdamW
@@ -380,11 +461,12 @@ def main() -> None:
         f"max_length={max_length}, amp={use_amp}) ---"
     )
 
-    # กำหนดสถานะและสถิติเริ่มต้นของระบบ Early Stopping (ตรวจหาจุดอิ่มตัวความแม่นยำ)
-    best_val_acc = 0.0      # ความแม่นยำชุดประเมินผลลัพธ์ที่ดีที่สุด
-    best_state = None       # คลังเก็บพารามิเตอร์เวตตัวโมเดล NLP ณ จุดที่ดีที่สุด
-    best_epoch = 0          # รอบ Epoch ที่ทำความเข้าเป้าดีที่สุด
-    patience_counter = 0    # ตัวนับขีดรอลดระดับความอดทน
+    # กำหนดสถานะและสถิติเริ่มต้นของระบบ Early Stopping (ตรวจหาจุด MAE ต่ำสุด)
+    best_val_mae = float("inf")
+    best_val_acc = 0.0
+    best_state = None
+    best_epoch = 0
+    patience_counter = 0
 
     # 10. แกนลูปวนฝึกฝนโมเดลผ่านรอบ Epoch
     for epoch in range(config.EPOCHS):
@@ -409,6 +491,14 @@ def main() -> None:
             class_weights=None,
             use_amp=use_amp,
         )
+        val_mae = evaluate_loader_mae(
+            model,
+            val_loader,
+            device,
+            use_amp=use_amp,
+            use_regression=use_regression,
+            use_3class=use_3class,
+        )
         # เคลียร์ล้างหน่วยความจำแคชการ์ดจอที่ตกค้างเพื่อรักษาระดับการระบายความร้อนการ์ดจอ
         if device.type == "cuda":
             torch.cuda.empty_cache()
@@ -416,12 +506,12 @@ def main() -> None:
         print(
             f"Epoch {epoch + 1}/{config.EPOCHS} | "
             f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} | "
-            f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
+            f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} val_mae={val_mae:.4f}"
         )
 
-        # 10.3 ตรวจวิเคราะห์ว่ารอบนี้สร้างประวัติศาสตร์ความแม่นยำสูงสุดชุดใหม่ (Best checkpoint) ได้สำเร็จหรือไม่
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc # ขยับเกณฑ์ยอดสูงสุดขึ้น
+        if val_mae < best_val_mae:
+            best_val_mae = val_mae
+            best_val_acc = val_acc
             best_epoch = epoch + 1   # บันทึก Epoch แห่งชัยชนะ
             # บันทึกโคลนน้ำหนักพารามิเตอร์ทั้งหมดในโมเดลเก็บค้างในระบบแรมปกติ (CPU RAM) เพื่อป้องกันโมเดลถดถอยปลายทาง
             best_state = {
@@ -442,7 +532,7 @@ def main() -> None:
         if patience_counter >= config.XLMR_EARLY_STOPPING_PATIENCE:
             print(
                 f"Early stopping at epoch {epoch + 1} "
-                f"(no val_acc improvement for "
+                f"(no val_mae improvement for "
                 f"{config.XLMR_EARLY_STOPPING_PATIENCE} epochs)"
             )
             break # ทะลายออกนอกลูป Epoch
@@ -451,7 +541,7 @@ def main() -> None:
     if best_state is not None:
         # ดึงน้ำหนักตัวแบบ NLP รุ่นที่แข็งแกร่งที่สุดในประวัติศาสตร์รอบ Epoch กลับมาติดตั้งใส่ร่างโมเดล
         model.load_state_dict(best_state)
-        print(f"Restored best checkpoint from epoch {best_epoch} (val_acc={best_val_acc:.4f})")
+        print(f"Restored best checkpoint from epoch {best_epoch} (val_mae={best_val_mae:.4f})")
     else:
         print("Warning: no improvement seen; saving final epoch weights.")
 
@@ -460,8 +550,21 @@ def main() -> None:
     os.makedirs(out_dir, exist_ok=True)
     model.save_pretrained(out_dir)     # บันทึกพารามิเตอร์น้ำหนักเวตตัวแบบหลักของ HuggingFace
     tokenizer.save_pretrained(out_dir) # บันทึกคลังคำศัพท์และโทเคนไนเซอร์
+    xlmr_meta = {
+        "preprocess_strategy": strategy,
+        "best_val_mae": best_val_mae if best_val_mae != float("inf") else None,
+        "best_val_acc": best_val_acc,
+        "best_epoch": best_epoch,
+        "use_regression": use_regression,
+        "use_3class": use_3class,
+    }
+    with open(config.XLMR_META_PATH, "w", encoding="utf-8") as f:
+        json.dump(xlmr_meta, f, indent=2)
     print(f"Done PyTorch loop training! Saved to {out_dir}")
 
 
 if __name__ == "__main__":
-    main() # วิ่งตัวฝึกฝนเมื่อสคริปต์ทำงานโดดๆ
+    parser = argparse.ArgumentParser(description="Train XLM-R Model")
+    parser.add_argument("--large", action="store_true", help="Train XLM-R Large instead of Base")
+    args = parser.parse_args()
+    main(use_large=args.large) # วิ่งตัวฝึกฝนเมื่อสคริปต์ทำงานโดดๆ

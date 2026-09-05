@@ -1,0 +1,39 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "h1_best_combo_regression",
+  "hypothesis": "Best combo: regression + aggressive prep + slow LR + long seq.",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_USE_REGRESSION": true,
+    "XLMR_PREPROCESS_STRATEGY": "aggressive",
+    "LEARNING_RATE": 1e-05,
+    "MAX_LENGTH": 192,
+    "BATCH_SIZE": 2,
+    "XLMR_GRAD_ACCUM_STEPS": 4,
+    "EPOCHS": 5,
+    "XLMR_EARLY_STOPPING_PATIENCE": 3
+  },
+  "metrics": {
+    "mae": 0.3155458650288921,
+    "accuracy": 0.7586206896551724,
+    "f1_macro": 0.8118577075098814,
+    "f1_weighted": 0.7185498160010904,
+    "rmse": 0.42236188808718583,
+    "off_by_one_accuracy": 1.0,
+    "recall_star_1": 1.0,
+    "recall_star_2": 1.0,
+    "anomaly_rate": 0.0,
+    "anomaly_precision": 0.0,
+    "anomaly_recall": 0.0,
+    "anomaly_f1": 0.0,
+    "per_class_recall": {
+      "1": 1.0,
+      "2": 1.0,
+      "3": 1.0,
+      "4": 0.2222222222222222,
+      "5": 1.0
+    }
+  },
+  "status": "ok",
+  "duration": 921.0
+}

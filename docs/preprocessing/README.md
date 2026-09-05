@@ -12,7 +12,7 @@
 
 ฟังก์ชัน normalize ข้อความทั้งหมดอยู่ใน [text-normalization.md](text-normalization.md)
 
-เทคนิคการเทรนแต่ละโมเดล: [docs/training/README.md](../training/README.md)
+Resolver กลาง: `src/rris/data/normalize.py` — `resolve_normalize_func(model)` อ่าน `preprocess_strategy` จาก artifact meta
 
 ---
 
@@ -26,7 +26,7 @@
 - หาคอลัมน์ข้อความจาก alias: `review_body`, `text`, `review`
 - หาคอลัมน์คะแนนจาก alias: `stars`, `user_rating`, `rating`, `star`
 - แปลงคะแนนเป็นจำนวนเต็ม 1–5
-- ใช้ฟังก์ชัน `normalize_func` กับทุกแถวข้อความ (ค่า default = `extended_normalize_text`)
+- ใช้ฟังก์ชัน `normalize_func` กับทุกแถวข้อความ
 
 ### 2. ล้างข้อมูล
 
@@ -38,19 +38,17 @@
 | `DROP_DUPLICATE_TEXT` | True | ลบข้อความซ้ำ (เก็บแถวแรก) |
 | `DUPLICATE_KEEP` | `"first"` | เก็บแถวไหนเมื่อเจอซ้ำ |
 
-XLM-R และ Embedding ใช้ `min_text_length=5` แบบ hardcode ในสคริปต์เทรน (เทียบเท่า config)
-
 ---
 
 ## สรุปเปรียบเทียบ normalize ต่อโมเดล
 
 | โมเดล | Train | Inference / Eval |
 |-------|-------|---------------------|
-| **Baseline** | `extended_normalize_text` | `extended_normalize_text` |
-| **XLM-R** | `aggressive` (จาก `XLMR_PREPROCESS_STRATEGY`) | `xlmr_normalize_text` ⚠️ |
-| **Embedding** | `aggressive` (จาก `XLMR_PREPROCESS_STRATEGY`) | `aggressive` (eval / web) · `extended_normalize_text` (pipeline CLI ถ้าไม่ใช่ xlmr) ⚠️ |
+| **Baseline** | `extended` (`preprocess_strategy` ใน meta) | `resolve_normalize_func("baseline")` |
+| **XLM-R** | `XLMR_PREPROCESS_STRATEGY` → บันทึกใน `xlmr_meta.json` | อ่านจาก meta หรือ config default |
+| **Embedding** | เหมือน XLM-R | อ่านจาก `embedding_meta.json` |
 
-⚠️ **Train vs inference ไม่ตรงกัน** ในบาง path — ดูรายละเอียดใน [xlmr.md](xlmr.md) และ [embedding.md](embedding.md)
+Train และ inference ใช้ strategy เดียวกันผ่าน `prepare_scoring_for_model(path, model)` — retrain หลัง overhaul เพื่อ populate meta ถ้า artifacts เก่าไม่มี field
 
 ---
 
@@ -58,12 +56,9 @@ XLM-R และ Embedding ใช้ `min_text_length=5` แบบ hardcode ใ�
 
 | คำสั่ง / สคริปต์ | ฟังก์ชันเตรียมข้อมูล |
 |-----------------|---------------------|
-| `python -m rris evaluate --model baseline` | `prepare_scoring_dataframe(..., extended_normalize_text)` |
-| `python -m rris evaluate --model xlmr` | `prepare_scoring_dataframe(..., xlmr_normalize_text)` |
-| `python -m rris evaluate --model embedding` | `prepare_scoring_dataframe(..., aggressive)` |
-| `python -m rris score --model xlmr` | `xlmr_normalize_text` |
-| `python -m rris score --model baseline/embedding` | `extended_normalize_text` |
-| `scripts/initialize_web_data.py` | ตามโมเดลที่เลือก (ดู [embedding.md](embedding.md)) |
+| `python -m rris evaluate` | `prepare_scoring_for_model(..., model)` |
+| `python -m rris score` | `prepare_scoring_for_model` |
+| `scripts/initialize_web_data.py` | `prepare_scoring_for_model` |
 
 ---
 
@@ -71,14 +66,7 @@ XLM-R และ Embedding ใช้ `min_text_length=5` แบบ hardcode ใ�
 
 ```python
 # src/rris/config.py
-MAX_REVIEW_CHARS = 500              # Baseline เท่านั้น
+MAX_REVIEW_CHARS = 500              # Baseline truncation
 XLMR_PREPROCESS_STRATEGY = "aggressive"
 MAX_LENGTH = 128                    # XLM-R token limit
-EMBEDDING_MAX_LENGTH = 128          # Embedding (encode ใช้ batch ไม่ truncate แยก)
 ```
-
----
-
-## โมเดลที่ยังไม่ implement
-
-WangchanBERTa, Hybrid Ensemble มี config path ใน `config.py` แต่ยังไม่มี train/inference pipeline — ไม่มีเอกสาร preprocessing แยก

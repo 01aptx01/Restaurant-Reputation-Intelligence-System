@@ -1,0 +1,14 @@
+{
+  "manifest": "xlmr_sweep.yaml",
+  "variant": "b2_classification_focal_high_gamma",
+  "hypothesis": "Higher gamma (3.0) for stronger focus on hard samples.",
+  "model": "xlmr",
+  "config_overrides": {
+    "XLMR_USE_REGRESSION": false,
+    "XLMR_USE_FOCAL_LOSS": true,
+    "XLMR_FOCAL_GAMMA": 3.0
+  },
+  "status": "error",
+  "error": "shapes (58,1) and (5,) not aligned: 1 (dim 1) != 5 (dim 0)",
+  "duration": 92.0
+}

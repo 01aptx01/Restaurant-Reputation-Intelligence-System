@@ -16,10 +16,18 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import f1_score, accuracy_score
+from sklearn.metrics import f1_score, accuracy_score, mean_absolute_error
 
 from rris import config # นำเข้าศูนย์กลางพารามิเตอร์และคอนฟิกูเรชันหลัก
 from rris import utils  # นำเข้าตัวช่วยล้างทำความสะอาดข้อความและฟังก์ชันคำนวณถ่วงน้ำหนัก
+from rris.data.augmentation import apply_train_augmentation
+from rris.data.normalize import BASELINE_PREPROCESS_STRATEGY
+from rris.evaluation.selection import (
+    classifier_val_mae,
+    pick_lowest_mae,
+    xgb_booster_val_mae,
+)
+from rris.inference.common import expected_rating_from_probs
 
 
 def train_xgb_native(
@@ -305,52 +313,8 @@ def main() -> None:
         label_test="HF test (after clean)",
     )
 
-    train_df = df_train # สร้างตัวแปรอ้างอิงตารางฝึกสอนสำหรับการสลับผสมตัวแปร
-    
-    # 4. นโยบายเสริมความแข็งแกร่ง 1: นำเข้าข้อความจำลองเฉลยสปอยรีวิว (Mock Mix) มาร่วมฝึกฝน Smoke Test 20%
-    if config.BASELINE_MOCK_MIX_FRACTION > 0:
-        before = len(train_df)
-        train_df = utils.mix_mock_training_data(
-            train_df,
-            getattr(config, "MOCK_TRAIN_PATH", None),
-            config.BASELINE_MOCK_MIX_FRACTION,
-            min_text_length=config.MIN_TEXT_LENGTH,
-            drop_duplicates=config.DROP_DUPLICATE_TEXT,
-            duplicate_keep=config.DUPLICATE_KEEP,
-            random_state=config.RANDOM_STATE,
-        )
-        print(
-            f"Mock mix (fraction={config.BASELINE_MOCK_MIX_FRACTION}): "
-            f"{before} -> {len(train_df)} rows"
-        )
-
-    # 5. นโยบายเสริมความแข็งแกร่ง 2: สุ่มสกัดลบข้อความ 4 ดาว (Undersampling) ซึ่งเป็น Majority คลาสมหาศาลออกเหลือเพียง 65%
-    if config.BASELINE_UNDERSAMPLE_STAR4_FRACTION < 1.0:
-        before = len(train_df)
-        train_df = utils.undersample_star_ratings(
-            train_df,
-            star=4,
-            keep_fraction=config.BASELINE_UNDERSAMPLE_STAR4_FRACTION,
-            random_state=config.RANDOM_STATE,
-        )
-        print(
-            f"Undersample 4-star (keep={config.BASELINE_UNDERSAMPLE_STAR4_FRACTION}): "
-            f"{before} -> {len(train_df)} rows"
-        )
-
-    # 6. นโยบายเสริมความแข็งแกร่ง 3: จำลองคัดลอกเพิ่มปริมาณแถวรีวิวคะแนนดาวต่ำ 1-2 ดาว (Oversampling) เพิ่ม 5 เท่า
-    if config.BASELINE_OVERSAMPLE_LOW_STARS:
-        train_df = utils.oversample_low_star_reviews(
-            train_df,
-            factor=config.BASELINE_OVERSAMPLE_FACTOR,
-        )
-        print(
-            f"Oversampled low stars (factor={config.BASELINE_OVERSAMPLE_FACTOR}): "
-            f"{len(df_train)} -> {len(train_df)} rows"
-        )
-
-    # 7. หั่นเอาเฉพาะความยาวตัวอักษรเริ่มต้นสูงสุด 500 อักขระเพื่อประหยัดพื้นที่เวกเตอร์สแกนระดับประโยค
-    train_df = utils.apply_text_truncation(train_df, config.MAX_REVIEW_CHARS)
+    # 4-7. ประยุกต์ใช้นโยบายเสริมความแข็งแกร่งชุดข้อมูลทั้งหมด (Mock Mix, Undersample, Oversample, Augmentation, Truncation)
+    train_df = utils.prepare_baseline_train_df(df_train, verbose=True)
     df_val = utils.apply_text_truncation(df_val, config.MAX_REVIEW_CHARS)
 
     print("--- Step 2: TF-IDF + features ---")
@@ -368,6 +332,7 @@ def main() -> None:
     
     y_train = _training_labels(train_df["user_rating"].values)
     y_val_true = _training_labels(df_val["user_rating"].values)
+    y_val_stars = df_val["user_rating"].values.astype(int)
     
     # 9. เตรียม DMatrix สำหรับ XGBoost
     dtrain, dval = make_dmatrices(X_train, X_val, train_df, df_val)
@@ -388,7 +353,10 @@ def main() -> None:
     else:
         y_val_xgb_pred = np.argmax(y_val_xgb_prob, axis=1) if y_val_xgb_prob.ndim > 1 else np.round(y_val_xgb_prob)
     f1_xgb = f1_score(y_val_true, y_val_xgb_pred, average="macro")
-    print(f"XGBoost F1-Macro: {f1_xgb:.4f}")
+    mae_xgb = xgb_booster_val_mae(
+        bst_xgb, dval, y_val_stars, use_regression=config.BASELINE_USE_REGRESSION
+    )
+    print(f"XGBoost F1-Macro: {f1_xgb:.4f} | Val MAE: {mae_xgb:.4f}")
     
     # 10. เตรียม Weights สำหรับ Sklearn Models
     sample_weights = None
@@ -400,7 +368,8 @@ def main() -> None:
     lr = LogisticRegression(max_iter=1000, class_weight='balanced', n_jobs=-1)
     lr.fit(X_train, y_train, sample_weight=sample_weights)
     f1_lr = f1_score(y_val_true, lr.predict(X_val), average="macro")
-    print(f"Logistic Regression F1-Macro: {f1_lr:.4f}")
+    mae_lr = classifier_val_mae(lr, X_val, y_val_stars)
+    print(f"Logistic Regression F1-Macro: {f1_lr:.4f} | Val MAE: {mae_lr:.4f}")
     
     print("\n[3/4] Training Linear SVM...")
     svm = LinearSVC(max_iter=1000, class_weight='balanced', dual=False)
@@ -414,26 +383,35 @@ def main() -> None:
         calibrated_svm = CalibratedClassifierCV(svm, cv=3)
         calibrated_svm.fit(X_train, y_train, sample_weight=sample_weights)
     f1_svm = f1_score(y_val_true, calibrated_svm.predict(X_val), average="macro")
-    print(f"Linear SVM F1-Macro: {f1_svm:.4f}")
+    mae_svm = classifier_val_mae(calibrated_svm, X_val, y_val_stars)
+    print(f"Linear SVM F1-Macro: {f1_svm:.4f} | Val MAE: {mae_svm:.4f}")
     
     print("\n[4/4] Training Random Forest...")
     rf = RandomForestClassifier(n_estimators=100, class_weight='balanced', n_jobs=-1, random_state=config.RANDOM_STATE)
     rf.fit(X_train, y_train, sample_weight=sample_weights)
     f1_rf = f1_score(y_val_true, rf.predict(X_val), average="macro")
-    print(f"Random Forest F1-Macro: {f1_rf:.4f}")
+    mae_rf = classifier_val_mae(rf, X_val, y_val_stars)
+    print(f"Random Forest F1-Macro: {f1_rf:.4f} | Val MAE: {mae_rf:.4f}")
     
-    # 11. เปรียบเทียบและเลือกโมเดลที่ดีที่สุด
+    # 11. เปรียบเทียบและเลือกโมเดลที่ดีที่สุด (MAE ต่ำสุด)
+    models_mae = {
+        "xgboost": mae_xgb,
+        "logistic_regression": mae_lr,
+        "linear_svm": mae_svm,
+        "random_forest": mae_rf,
+    }
     models_f1 = {
         "xgboost": f1_xgb,
         "logistic_regression": f1_lr,
         "linear_svm": f1_svm,
-        "random_forest": f1_rf
+        "random_forest": f1_rf,
     }
-    best_model_name = max(models_f1, key=models_f1.get)
+    best_model_name = pick_lowest_mae(models_mae)
+    best_mae = models_mae[best_model_name]
     best_f1 = models_f1[best_model_name]
     
     print("\n" + "="*50)
-    print(f"WINNER: {best_model_name.upper()} (F1-Macro: {best_f1:.4f})")
+    print(f"WINNER: {best_model_name.upper()} (Val MAE: {best_mae:.4f}, F1-Macro: {best_f1:.4f})")
     print("="*50 + "\n")
     
     best_model_obj = None
@@ -449,7 +427,9 @@ def main() -> None:
     # 12. จดบันทึกรายงานพารามิเตอร์ของระบบทั้งหมด (Metadata) ลงตัวแปรกองเพื่อบันทึกลงในไดเรกทอรี
     meta = {
         "best_model_type": best_model_name,
+        "best_val_mae": best_mae,
         "best_f1_macro": best_f1,
+        "preprocess_strategy": BASELINE_PREPROCESS_STRATEGY,
         "tfidf_max_features": config.TFIDF_MAX_FEATURES,
         "use_lsa": config.BASELINE_USE_LSA,
         "lsa_n_components": config.LSA_N_COMPONENTS if config.BASELINE_USE_LSA else None,

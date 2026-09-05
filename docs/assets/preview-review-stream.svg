@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="100%" height="520" fill="none">
+  <defs>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.05"/>
+    </filter>
+  </defs>
+
+  <style>
+    .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Plus Jakarta Sans", sans-serif; }
+    .font-mono { font-family: "JetBrains Mono", Consolas, Menlo, monospace; }
+  </style>
+
+  <!-- Container Box -->
+  <rect width="900" height="520" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Top App Window Bar -->
+  <rect width="900" height="42" rx="14" fill="#ffffff"/>
+  <line x1="0" y1="42" x2="900" y2="42" stroke="#e2e8f0" stroke-width="1"/>
+  <circle cx="24" cy="21" r="5.5" fill="#f43f5e"/>
+  <circle cx="42" cy="21" r="5.5" fill="#f59e0b"/>
+  <circle cx="60" cy="21" r="5.5" fill="#10b981"/>
+  <text x="450" y="26" fill="#475569" font-size="12" class="font-sans" font-weight="700" text-anchor="middle">Live Scored Review Inspector · Thai Sentiment &amp; Anomaly Log</text>
+
+  <g transform="translate(36, 58)">
+
+    <!-- Review Card 1: Severe Anomaly -->
+    <g transform="translate(0, 0)" filter="url(#cardShadow)">
+      <rect width="828" height="120" rx="12" fill="#ffffff" stroke="#fca5a5" stroke-width="1.5"/>
+      <!-- Left color bar -->
+      <rect width="6" height="120" rx="3" fill="#e11d48"/>
+      
+      <!-- Top info line -->
+      <g transform="translate(24, 16)">
+        <!-- Tag 1 -->
+        <rect x="0" y="0" width="168" height="22" rx="6" fill="#fee2e2"/>
+        <text x="84" y="15" fill="#991b1b" font-size="10" class="font-sans" font-weight="800" text-anchor="middle">🚨 SEVERE ANOMALY (Δ = 3.9★)</text>
+
+        <rect x="176" y="0" width="138" height="22" rx="6" fill="#f1f5f9"/>
+        <text x="245" y="15" fill="#475569" font-size="10" class="font-mono" text-anchor="middle">Review ID: #TH-90214</text>
+
+        <!-- Right ratings -->
+        <text x="560" y="15" fill="#64748b" font-size="11" class="font-sans">Platform Star:</text>
+        <text x="636" y="15" fill="#d97706" font-size="12" class="font-sans" font-weight="800">5.0 ★</text>
+
+        <text x="690" y="15" fill="#64748b" font-size="11" class="font-sans">AI Pred:</text>
+        <text x="736" y="15" fill="#e11d48" font-size="12" class="font-sans" font-weight="800">1.1 ★</text>
+      </g>
+
+      <!-- Review Text (Thai) -->
+      <g transform="translate(24, 52)">
+        <text x="0" y="16" fill="#1e293b" font-size="13" class="font-sans" font-weight="500">
+          "อาหารมาไม่ตรงปก ปูมีกลิ่นคาวมาก รอนานเกือบชั่วโมง พนักงานหน้าบึ้ง ไม่ประทับใจเลย คุณภาพแย่ลงกว่าเดิมเยอะ"
+        </text>
+        <text x="0" y="44" fill="#94a3b8" font-size="10.5" class="font-mono">
+          Tokens: 26 | XLM-R Softmax Logits: [0.91, 0.06, 0.02, 0.01, 0.00] | Classification: Class 1 (Focal Loss calibrated)
+        </text>
+      </g>
+    </g>
+
+    <!-- Review Card 2: Authentic & Consistent -->
+    <g transform="translate(0, 134)" filter="url(#cardShadow)">
+      <rect width="828" height="120" rx="12" fill="#ffffff" stroke="#a7f3d0" stroke-width="1.5"/>
+      <rect width="6" height="120" rx="3" fill="#059669"/>
+      
+      <!-- Top info line -->
+      <g transform="translate(24, 16)">
+        <rect x="0" y="0" width="168" height="22" rx="6" fill="#d1fae5"/>
+        <text x="84" y="15" fill="#065f46" font-size="10" class="font-sans" font-weight="800" text-anchor="middle">✅ CONSISTENT (Δ = 0.2★)</text>
+
+        <rect x="176" y="0" width="138" height="22" rx="6" fill="#f1f5f9"/>
+        <text x="245" y="15" fill="#475569" font-size="10" class="font-mono" text-anchor="middle">Review ID: #TH-90218</text>
+
+        <text x="560" y="15" fill="#64748b" font-size="11" class="font-sans">Platform Star:</text>
+        <text x="636" y="15" fill="#d97706" font-size="12" class="font-sans" font-weight="800">5.0 ★</text>
+
+        <text x="690" y="15" fill="#64748b" font-size="11" class="font-sans">AI Pred:</text>
+        <text x="736" y="15" fill="#059669" font-size="12" class="font-sans" font-weight="800">4.8 ★</text>
+      </g>
+
+      <!-- Review Text (Thai) -->
+      <g transform="translate(24, 52)">
+        <text x="0" y="16" fill="#1e293b" font-size="13" class="font-sans" font-weight="500">
+          "น้ำจิ้มซีฟู้ดรสเด็ดจัดจ้านมาก ปูไข่แน่นทุกตัว สดหวาน เนื้อเด้ง คุ้มค่าสมราคา บรรยากาศร้านดีสะอาด แนะนำเลยครับ"
+        </text>
+        <text x="0" y="44" fill="#94a3b8" font-size="10.5" class="font-mono">
+          Tokens: 28 | XLM-R Softmax Logits: [0.00, 0.01, 0.02, 0.12, 0.85] | Classification: Class 5
+        </text>
+      </g>
+    </g>
+
+    <!-- Review Card 3: Moderate Sentiment Drift -->
+    <g transform="translate(0, 268)" filter="url(#cardShadow)">
+      <rect width="828" height="120" rx="12" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5"/>
+      <rect width="6" height="120" rx="3" fill="#ea580c"/>
+      
+      <!-- Top info line -->
+      <g transform="translate(24, 16)">
+        <rect x="0" y="0" width="168" height="22" rx="6" fill="#ffedd5"/>
+        <text x="84" y="15" fill="#9a3412" font-size="10" class="font-sans" font-weight="800" text-anchor="middle">⚠️ SENTIMENT DRIFT (Δ = 1.7★)</text>
+
+        <rect x="176" y="0" width="138" height="22" rx="6" fill="#f1f5f9"/>
+        <text x="245" y="15" fill="#475569" font-size="10" class="font-mono" text-anchor="middle">Review ID: #TH-90225</text>
+
+        <text x="560" y="15" fill="#64748b" font-size="11" class="font-sans">Platform Star:</text>
+        <text x="636" y="15" fill="#d97706" font-size="12" class="font-sans" font-weight="800">4.0 ★</text>
+
+        <text x="690" y="15" fill="#64748b" font-size="11" class="font-sans">AI Pred:</text>
+        <text x="736" y="15" fill="#ea580c" font-size="12" class="font-sans" font-weight="800">2.3 ★</text>
+      </g>
+
+      <!-- Review Text (Thai) -->
+      <g transform="translate(24, 52)">
+        <text x="0" y="16" fill="#1e293b" font-size="13" class="font-sans" font-weight="500">
+          "รสชาติพอกินได้ครับ ไม่ได้ว้าวสมคำร่ำลือ ที่จอดรถค่อนข้างแคบเข้าออกลำบาก ราคาสูงไปนิดเมื่อเทียบกับปริมาณที่ได้"
+        </text>
+        <text x="0" y="44" fill="#94a3b8" font-size="10.5" class="font-mono">
+          Tokens: 31 | Softmax Expectation: 2.31 ★ | Moderate discrepancy warning
+        </text>
+      </g>
+    </g>
+
+  </g>
+
+  <!-- Bottom Caption Badge -->
+  <g transform="translate(30, 474)">
+    <rect width="400" height="34" rx="8" fill="#0f172a" fill-opacity="0.92"/>
+    <text x="18" y="22" fill="#38bdf8" font-size="11.5" class="font-mono" font-weight="600">
+      FEATURE 03 · Scored Review Inspector &amp; Star Delta
+    </text>
+  </g>
+</svg>

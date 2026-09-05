@@ -1,0 +1,16 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "b2_tfidf_5k_trigram",
+  "hypothesis": "Smaller vocab but trigrams capture longer phrases like 'ไม่อร่อยเลย'.",
+  "model": "baseline",
+  "config_overrides": {
+    "TFIDF_MAX_FEATURES": 5000,
+    "TFIDF_NGRAM_RANGE": [
+      1,
+      3
+    ]
+  },
+  "status": "error",
+  "error": "The 'ngram_range' parameter of TfidfVectorizer must be an instance of 'tuple'. Got [1, 3] instead.",
+  "duration": 8.7
+}

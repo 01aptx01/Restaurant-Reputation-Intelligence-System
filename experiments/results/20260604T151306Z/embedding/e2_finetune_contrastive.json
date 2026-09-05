@@ -1,0 +1,14 @@
+{
+  "manifest": "embedding_sweep.yaml",
+  "variant": "e2_finetune_contrastive",
+  "hypothesis": "Contrastive fine-tuning learns better star separation in embedding space.",
+  "model": "embedding",
+  "config_overrides": {
+    "EMBEDDING_FINETUNE": true,
+    "EMBEDDING_FINETUNE_MODE": "contrastive",
+    "EMBEDDING_FINETUNE_EPOCHS": 3
+  },
+  "status": "error",
+  "error": "Please install `datasets` to use this function: `pip install datasets`.",
+  "duration": 61.0
+}

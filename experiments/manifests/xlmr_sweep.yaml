@@ -1,0 +1,177 @@
+# experiments/manifests/xlmr_sweep.yaml
+# ==============================================================================
+# XLM-RoBERTa: Comprehensive Training Strategy Sweep
+# ==============================================================================
+# ทดลองปรับ preprocessing, loss function, learning rate, regression vs classification
+# เพื่อหา config ที่ให้ MAE ต่ำสุดบน holdout
+model: xlmr
+
+variants:
+  # ---------- Variant 0: Current Production Config (Baseline) ----------
+  - name: v0_current_production
+    hypothesis: "Reproduce current config.py settings as baseline reference."
+    config: {}
+
+  # ===================== A. PREPROCESSING STRATEGIES =====================
+
+  - name: a1_preprocess_default
+    hypothesis: "Default preprocessing (minimal cleaning)."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "default"
+
+  - name: a2_preprocess_minimal
+    hypothesis: "Minimal preprocessing preserves original token distribution for XLM-R."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "minimal"
+
+  - name: a3_preprocess_keep_digits
+    hypothesis: "Keep digits for price/quantity context in restaurant reviews."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "keep_digits"
+
+  - name: a4_preprocess_emoji_tag
+    hypothesis: "Replace emojis with [emoji] tag to preserve sentiment signal."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "emoji_tag"
+
+  - name: a5_preprocess_segment
+    hypothesis: "Word segmentation may help XLM-R understand Thai token boundaries."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "segment"
+
+  # ===================== B. LOSS FUNCTION VARIANTS =====================
+
+  - name: b1_classification_focal
+    hypothesis: "Focal Loss focuses on hard-to-classify examples (rare stars)."
+    config:
+      XLMR_USE_REGRESSION: false
+      XLMR_USE_FOCAL_LOSS: true
+      XLMR_FOCAL_GAMMA: 2.0
+
+  - name: b2_classification_focal_high_gamma
+    hypothesis: "Higher gamma (3.0) for stronger focus on hard samples."
+    config:
+      XLMR_USE_REGRESSION: false
+      XLMR_USE_FOCAL_LOSS: true
+      XLMR_FOCAL_GAMMA: 3.0
+
+  - name: b3_classification_weighted_ce
+    hypothesis: "Standard weighted CrossEntropy without focal modulation."
+    config:
+      XLMR_USE_REGRESSION: false
+      XLMR_USE_FOCAL_LOSS: false
+      XLMR_USE_CLASS_WEIGHT: true
+
+  - name: b4_regression_mse
+    hypothesis: "Ordinal regression (MSE) preserves star ordering for lower MAE."
+    config:
+      XLMR_USE_REGRESSION: true
+      XLMR_USE_FOCAL_LOSS: false
+
+  - name: b5_classification_no_weight
+    hypothesis: "Ablation: unweighted CE to check if class balancing hurts accuracy."
+    config:
+      XLMR_USE_REGRESSION: false
+      XLMR_USE_FOCAL_LOSS: false
+      XLMR_USE_CLASS_WEIGHT: false
+
+  # ===================== C. LEARNING RATE & SCHEDULE =====================
+
+  - name: c1_lr_1e5
+    hypothesis: "Lower LR (1e-5) for more cautious fine-tuning."
+    config:
+      LEARNING_RATE: 0.00001
+
+  - name: c2_lr_5e5
+    hypothesis: "Higher LR (5e-5) for faster convergence."
+    config:
+      LEARNING_RATE: 0.00005
+
+  - name: c3_lr_3e5_no_scheduler
+    hypothesis: "Medium LR without scheduler for stable training."
+    config:
+      LEARNING_RATE: 0.00003
+      XLMR_USE_LR_SCHEDULER: false
+
+  # ===================== D. BATCH SIZE & SEQUENCE LENGTH =====================
+
+  - name: d1_maxlen_256
+    hypothesis: "Longer sequences capture more review context."
+    config:
+      MAX_LENGTH: 256
+      BATCH_SIZE: 2
+      XLMR_GRAD_ACCUM_STEPS: 4
+
+  - name: d2_maxlen_64
+    hypothesis: "Shorter sequences are faster and may still capture sentiment."
+    config:
+      MAX_LENGTH: 64
+      BATCH_SIZE: 8
+      XLMR_GRAD_ACCUM_STEPS: 1
+
+  # ===================== E. CLASS WEIGHT & BOOST =====================
+
+  - name: e1_low_star_boost_3
+    hypothesis: "Stronger low-star boost (3.0) for better recall on 1-2 stars."
+    config:
+      XLMR_LOW_STAR_BOOST: 3.0
+
+  - name: e2_low_star_boost_1
+    hypothesis: "No extra boost — equal treatment of all classes."
+    config:
+      XLMR_LOW_STAR_BOOST: 1.0
+
+  # ===================== F. 3-CLASS GROUPING =====================
+
+  - name: f1_3class_focal
+    hypothesis: "Merge to 3 classes (neg/neutral/pos) with focal loss."
+    config:
+      XLMR_USE_3CLASS: true
+      XLMR_USE_FOCAL_LOSS: true
+      XLMR_FOCAL_GAMMA: 2.0
+
+  - name: f2_3class_regression
+    hypothesis: "3-class grouping is not compatible with regression; test classification."
+    config:
+      XLMR_USE_3CLASS: true
+      XLMR_USE_REGRESSION: false
+
+  # ===================== G. EPOCHS & EARLY STOPPING =====================
+
+  - name: g1_5epochs_patience5
+    hypothesis: "More epochs with higher patience for thorough convergence."
+    config:
+      EPOCHS: 5
+      XLMR_EARLY_STOPPING_PATIENCE: 5
+
+  - name: g2_2epochs_patience1
+    hypothesis: "Fewer epochs with aggressive early stopping to prevent overfit."
+    config:
+      EPOCHS: 2
+      XLMR_EARLY_STOPPING_PATIENCE: 1
+
+  # ===================== H. BEST COMBINATIONS =====================
+
+  - name: h1_best_combo_regression
+    hypothesis: "Best combo: regression + aggressive prep + slow LR + long seq."
+    config:
+      XLMR_USE_REGRESSION: true
+      XLMR_PREPROCESS_STRATEGY: "aggressive"
+      LEARNING_RATE: 0.00001
+      MAX_LENGTH: 192
+      BATCH_SIZE: 2
+      XLMR_GRAD_ACCUM_STEPS: 4
+      EPOCHS: 5
+      XLMR_EARLY_STOPPING_PATIENCE: 3
+
+  - name: h2_best_combo_focal
+    hypothesis: "Best combo: focal + keep_digits + standard batch + boost."
+    config:
+      XLMR_USE_REGRESSION: false
+      XLMR_USE_FOCAL_LOSS: true
+      XLMR_FOCAL_GAMMA: 2.5
+      XLMR_PREPROCESS_STRATEGY: "keep_digits"
+      XLMR_LOW_STAR_BOOST: 2.0
+      LEARNING_RATE: 0.00002
+      EPOCHS: 4
+      XLMR_EARLY_STOPPING_PATIENCE: 3

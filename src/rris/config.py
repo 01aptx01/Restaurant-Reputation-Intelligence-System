@@ -41,14 +41,14 @@ DUPLICATE_KEEP = "first"        # หากเจอรีวิวซ้ำก�
 ARTIFACTS_DIR = _p("artifacts")                                          # โฟลเดอร์หลักสำหรับจัดเก็บโมเดลที่ฝึกฝนเสร็จแล้ว
 BASELINE_ARTIFACTS_DIR = _p("artifacts", "baseline")                      # โฟลเดอร์จัดเก็บโมเดลกลุ่ม Baseline
 XLMR_ARTIFACTS_DIR = _p("artifacts", "xlmr")                              # โฟลเดอร์จัดเก็บโมเดลกลุ่ม XLM-RoBERTa
-WANGCHAN_ARTIFACTS_DIR = os.path.join(ARTIFACTS_DIR, "wangchan")
-HYBRID_ARTIFACTS_DIR = os.path.join(ARTIFACTS_DIR, "hybrid_ensemble")
-HYBRID_META_PATH = os.path.join(HYBRID_ARTIFACTS_DIR, "hybrid_meta.json")                      # [NEW] โฟลเดอร์จัดเก็บโมเดล WangchanBERTa
-DUAL_MIXED_ARTIFACTS_DIR = _p("artifacts", "dual_mixed")                  # โฟลเดอร์จัดเก็บโมเดลผสม (Dual-Encoder)
+XLMR_META_PATH = _p("artifacts", "xlmr", "xlmr_meta.json")
+XLMR_LARGE_ARTIFACTS_DIR = _p("artifacts", "xlmr_large")                  # โฟลเดอร์จัดเก็บโมเดลกลุ่ม XLM-RoBERTa Large
+XLMR_LARGE_META_PATH = _p("artifacts", "xlmr_large", "xlmr_meta.json")
 TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "tfidf_vectorizer.joblib") # พาธจัดเก็บ Word-level TF-IDF
 CHAR_TFIDF_VECTORIZER_PATH = _p("artifacts", "baseline", "char_tfidf_vectorizer.joblib") # พาธจัดเก็บ Char-level TF-IDF
 LSA_TRANSFORMER_PATH = _p("artifacts", "baseline", "lsa_transformer.joblib") # พาธจัดเก็บตัวลดมิติข้อมูล TruncatedSVD (LSA)
 XGB_MODEL_PATH = _p("artifacts", "baseline", "xgb_model.json")            # พาธจัดเก็บไฟล์โครงสร้างและน้ำหนักของ XGBoost
+SKLEARN_MODEL_PATH = _p("artifacts", "baseline", "sklearn_model.joblib")  # พาธจัดเก็บไฟล์โครงสร้างของ LinearSVC/sklearn
 BASELINE_META_PATH = _p("artifacts", "baseline", "baseline_meta.json")    # ไฟล์ Metadata บันทึกคุณสมบัติการเทรนของ Baseline
 
 # ==============================================================================
@@ -80,32 +80,40 @@ XLMR_PREPROCESS_ABLATION_LOG = _p("experiments", "xlmr", "preprocess_ablation_lo
 # 6. การจัดสรรฮาร์ดแวร์ประมวลผล (COMPUTATIONAL RESOURCES)
 # ==============================================================================
 def _cuda_runtime_ok() -> bool:
-    """True only when CUDA works for this GPU + PyTorch wheel (incl. RTX 50 sm_120)."""
+    """True when a small CUDA kernel runs successfully (any GPU, incl. RTX 50 sm_120)."""
     if not torch.cuda.is_available():
-        return False
-    if os.environ.get("RRIS_FORCE_CUDA") == "1":
-        try:
-            torch.zeros(1, device="cuda")
-            return True
-        except Exception:
-            return False
-    major, _ = torch.cuda.get_device_capability(0)
-    # Blackwell (sm_120) needs PyTorch cu128 wheels; cu118 reports is_available but kernels fail.
-    if major >= 12 and "+cu128" not in torch.__version__:
         return False
     try:
         x = torch.randn(8, 8, device="cuda")
         _ = x @ x.T
+        torch.cuda.synchronize()
         del x, _
         return True
     except Exception:
         return False
 
 
+def cuda_device_hint() -> str:
+    """Human-readable hint when CUDA is visible but the runtime probe failed."""
+    if not torch.cuda.is_available():
+        return "PyTorch was built without CUDA or no NVIDIA driver is installed."
+    major, minor = torch.cuda.get_device_capability(0)
+    name = torch.cuda.get_device_name(0)
+    base = f"{name} (sm_{major}{minor}), torch {torch.__version__}"
+    if major >= 12 and "+cu128" not in torch.__version__:
+        return (
+            f"{base}. RTX 50-series needs a CUDA 12.8 wheel "
+            f"(e.g. pip install torch --index-url https://download.pytorch.org/whl/cu128)."
+        )
+    return f"{base}. Reinstall a PyTorch build that matches your GPU/driver."
+
+
 def _resolve_torch_device() -> str:
     forced = os.environ.get("FORCE_TORCH_DEVICE")
     if forced:
         return forced
+    if os.environ.get("RRIS_FORCE_CUDA") == "1":
+        return "cuda"
     return "cuda" if _cuda_runtime_ok() else "cpu"
 
 
@@ -138,7 +146,7 @@ TFIDF_MIN_DF = 2                       # คำที่นำมาวิเค
 TFIDF_MAX_DF = 0.9                     # คำที่พบในกว่า 90% ของรีวิวทั้งหมดจะถูกลบทิ้ง (คำที่โผล่เยอะจนไม่มีอำนาจแยกแยะกลุ่มดาว)
 BASELINE_USE_LSA = False               # ไม่เปิดตัวลดมิติข้อมูลแฝง Latent Semantic Analysis (ปิดไว้ตามการทดลอง Ablation)
 LSA_N_COMPONENTS = 400                 # หากเปิดใช้ LSA จะลดความละเอียดของเวกเตอร์ TF-IDF ลงเหลือ 400 มิติ
-BASELINE_USE_EXTRA_FEATURES = True     # เปิดใช้ลักษณะพิเศษเฉพาะตัว (ความยาวอักษร, จำนวนคำ, และจำนวนคำปฏิเสธภาษาไทย)
+BASELINE_USE_EXTRA_FEATURES = False     # เปิดใช้ลักษณะพิเศษเฉพาะตัว (ความยาวอักษร, จำนวนคำ, และจำนวนคำปฏิเสธภาษาไทย)
 BASELINE_USE_CHAR_TFIDF = True         # เปิดใช้ Character-level TF-IDF เพื่อแก้ปัญหาคำไทยสะกดผิดและเพิ่มอำนาจการแยกแยะคำศัพท์
 BASELINE_CHAR_MAX_FEATURES = 4000      # สกัดคุณลักษณะย่อยระดับตัวอักษรสูงสุด 4,000 มิติ
 BASELINE_CHAR_NGRAM_RANGE = (3, 5)     # ค้นหาแพทเทิร์นลำดับตัวอักษรสะกดตั้งแต่ 3 ถึง 5 ตัวอักษรต่อเนื่อง
@@ -158,10 +166,13 @@ BASELINE_KFOLD = 5                         # จำนวนรอบพับ�
 # ==============================================================================
 AUGMENT_ENABLED = True                     # เปิด/ปิดระบบขยายข้อมูลอัตโนมัติสำหรับคลาสดาวน้อย
 AUGMENT_TARGET_STARS = (1, 2, 3)           # คลาสดาวเป้าหมายที่จะทำ augmentation (ดาวที่มีข้อมูลน้อย)
-AUGMENT_TARGET_COUNT = 800                 # จำนวนตัวอย่างเป้าหมายต่อคลาสหลัง augmentation (ถมให้ถึงหลักพัน)
+AUGMENT_TARGET_COUNT = 2500                 # จำนวนตัวอย่างเป้าหมายต่อคลาสหลัง augmentation (ถมให้ถึงหลักพัน)
 AUGMENT_SYNONYM_PROB = 0.3                 # ความน่าจะเป็นในการสุ่มแทนที่คำด้วยคำพ้องความหมาย (30%)
 AUGMENT_SHUFFLE_PROB = 0.2                 # ความน่าจะเป็นในการสลับลำดับคำในประโยค (20%)
 AUGMENT_RANDOM_STATE = 42                  # ค่าความสุ่มคงที่สำหรับ reproducibility ของ augmentation
+AUGMENT_FROM_ERRORS = False                # เปิด augment จาก error analysis export
+AUGMENT_FROM_ERRORS_PATH = ""              # path ไป severe error CSV
+AUGMENT_FROM_ERRORS_FACTOR = 2             # จำนวนคopies ต่อ error row
 
 # ==============================================================================
 # 10. การกำหนดค่าเพื่อสกัดข้อผิดพลาดและวิเคราะห์ (ERROR ANALYSIS SETTINGS)
@@ -198,25 +209,31 @@ EMBEDDING_MODEL_NAME = "intfloat/multilingual-e5-base"   # โมเดล Embed
 EMBEDDING_BATCH_SIZE = 32
 EMBEDDING_MAX_LENGTH = 128
 EMBEDDING_ARTIFACTS_DIR = _p("artifacts", "embedding")
-EMBEDDING_CACHE_PATH = _p("data", "embedding_cache.joblib")
+EMBEDDING_CACHE_PATH = _p("data", "embedding_cache.joblib")  # legacy; prefer hashed cache
 EMBEDDING_CLF_TYPE = "xgb"              # 'xgb' หรือ 'lr' (Logistic Regression)
 EMBEDDING_LR_MAX_ITER = 1000
-
-# ==============================================================================
-# 11.7 พารามิเตอร์การตั้งค่าโมเดล Hybrid Ensemble (XLM-R + Sentence Embedding Soft Voting)
-# ==============================================================================
-ENSEMBLE_ARTIFACTS_DIR = _p("artifacts", "ensemble")
-ENSEMBLE_META_PATH = _p("artifacts", "ensemble", "ensemble_meta.json")
+EMBEDDING_FINETUNE = False
+EMBEDDING_FINETUNE_MODEL = "BAAI/bge-m3"
+EMBEDDING_FINETUNE_MODE = "supervised"  # supervised | contrastive
+EMBEDDING_FINETUNE_EPOCHS = 2
+EMBEDDING_FINETUNE_BATCH_SIZE = 16
+EMBEDDING_FINETUNE_OUTPUT = _p("artifacts", "embedding", "finetuned_model")
 
 # ==============================================================================
 # 12. พารามิเตอร์การจูนโมเดล XLM-RoBERTa (ADVANCED MODEL HYPERPARAMETERS)
 # ==============================================================================
 XLMR_MODEL_NAME = "xlm-roberta-base"   # ชื่อพรีเทรนโมเดลบน Hugging Face Hub (ขนาด 125M พารามิเตอร์)
+XLMR_LARGE_MODEL_NAME = "xlm-roberta-large" # ชื่อพรีเทรนโมเดลขนาดใหญ่ (ขนาด 355M พารามิเตอร์)
 MAX_LENGTH = 128                       # ความยาวโทเคนสูงสุดต่อรีวิวที่รองรับ (หากยาวกว่านี้จะทำการตัดหั่นแบบ Head+Tail)
-BATCH_SIZE = 4                         # ขนาดตัวอย่างต่อการก้าวรันหนึ่งครัง (ลดขนาดลงเพื่อป้องกันหน่วยความจำการ์ดจอแตกบน GPU 6GB)
-XLMR_GRAD_ACCUM_STEPS = 2              # เพิ่มระดับสะสมเกรเดียนต์เพื่อรักษา Effective Batch Size = 8 เท่าเดิม
+BATCH_SIZE = 24                        # ขนาดตัวอย่างต่อการก้าวรันหนึ่งครัง (ลดขนาดลงเพื่อป้องกันหน่วยความจำการ์ดจอแตกบน GPU 6GB)
+XLMR_LARGE_BATCH_SIZE = 4               # ขนาดแบทช์สำหรับโมเดลใหญ่ (ลดลงเพื่อป้องกัน OOM)
+XLMR_GRAD_ACCUM_STEPS = 1              # เพิ่มระดับสะสมเกรเดียนต์เพื่อรักษา Effective Batch Size = 8 เท่าเดิม
+XLMR_LARGE_GRAD_ACCUM_STEPS = 4        # รอบสะสมเกรเดียนต์สำหรับโมเดลใหญ่
 XLMR_USE_AMP = True                    # เปิดโหมด Automatic Mixed Precision ใช้ทศนิยม 16 บิต (FP16) ลดทอนแรมการ์ดจอลงเท่าตัว
-XLMR_GRADIENT_CHECKPOINTING = True     # เปิดใช้ระบบฝากผลเกรเดียนต์ไว้คำนวณใหม่แทนการเก็บค้างค้างเพื่อเซฟแรมการ์ดจอขั้นสุด (เหลือความจุขั้นต่ำ 6GB)
+XLMR_GRADIENT_CHECKPOINTING = False     # เปิดใช้ระบบฝากผลเกรเดียนต์ไว้คำนวณใหม่แทนการเก็บค้างค้างเพื่อเซฟแรมการ์ดจอขั้นสุด (เหลือความจุขั้นต่ำ 6GB)
+XLMR_LARGE_GRADIENT_CHECKPOINTING = True # บังคับเปิดเพื่อโมเดลใหญ่เพื่อลดแรมการ์ดจอลง
+XLMR_FREEZE_EMBEDDINGS = False         # ปิดการเทรนชั้น Embedding เพื่อเซฟ VRAM
+XLMR_FREEZE_LAYERS = 0                 # จำนวน Transformer Layer ล่างสุดที่ต้องการแช่แข็ง (เช่น 12)
 LEARNING_RATE = 2e-5                   # อัตราความเร็วในการปรับตัวโมเดล NLP ปรับตัวโมเดลระดับสูง
 EPOCHS = 3                             # จำนวนรอบการวิ่งสอนผ่านข้อมูลทั้งหมดสูงสุด 5 รอบ
 WEIGHT_DECAY = 0.01                    # อัตราการลดทอนค่าน้ำหนักตัวแปร L2 Regularization ป้องกัน Overfitting
@@ -224,30 +241,21 @@ XLMR_USE_CLASS_WEIGHT = True           # เปิดใช้งาน Weighted
 XLMR_LOW_STAR_BOOST = 1.5              # ตัวคูณเร่งพิเศษสำหรับโมเดลระดับสูงเมื่อเทรนกลุ่มดาว 1-2 ดาว
 XLMR_EARLY_STOPPING_PATIENCE = 3       # ระบบจะสั่งหยุดทันทีหากความแม่นยำบน Holdout คงที่ต่อเนื่องกัน 3 รอบ Epoch
 XLMR_USE_LR_SCHEDULER = True           # เปิดใช้งานตัวปรับแต่งค่าความเร็วในการเรียนรู้อัตโนมัติ (Linear Warmup Scheduler)
-XLMR_USE_REGRESSION = True             # [NEW] เปิดใช้โหมด Ordinal Regression (MSE Loss) เพื่อลงโทษความห่างของดาวแทนการจัดกลุ่มคลาส
+XLMR_USE_REGRESSION = True             # Ordinal Regression (MSE Loss); disables Focal Loss below
 
 # --- Focal Loss สำหรับ XLM-R ---
-XLMR_USE_FOCAL_LOSS = True             # เปิดใช้ Focal Loss แทน CrossEntropyLoss เพื่อโฟกัสเคสที่ทายผิดบ่อย (Hard examples)
+XLMR_USE_FOCAL_LOSS = True             # Used only when XLMR_USE_REGRESSION=False (classification mode)
 XLMR_FOCAL_ALPHA = None                # Alpha สำหรับ Focal Loss (None = ใช้ class_weights แทน, หรือกำหนด list 5 ค่า)
 XLMR_FOCAL_GAMMA = 2.0                 # Gamma สำหรับ Focal Loss (ยิ่งสูง ยิ่งโฟกัสเคสยากมากขึ้น, ค่ามาตรฐาน = 2.0)
 
 # --- Preprocessing Strategy สำหรับ XLM-R ---
-XLMR_PREPROCESS_STRATEGY = "aggressive" # กลยุทธ์การล้างข้อมูลสำหรับ XLM-R ('default', 'minimal', 'aggressive', 'keep_digits', 'emoji_tag', 'segment')
+XLMR_PREPROCESS_STRATEGY = "keep_digits" # กลยุทธ์การล้างข้อมูลสำหรับ XLM-R ('default', 'minimal', 'aggressive', 'keep_digits', 'emoji_tag', 'segment')
 
 # --- 3-Class Label Grouping สำหรับ XLM-R ---
 XLMR_USE_3CLASS = False                # ยุบรวมคลาส: Negative (1-2★), Neutral (3★), Positive (4-5★)
 XLMR_3CLASS_LABEL_NAMES = ["Negative", "Neutral", "Positive"]  # ชื่อเรียกคลาสเพื่อใช้ในรายงาน
 XLMR_LR_SCHEDULER_FACTOR = 0.5         # ตัวแปรเสริม (ไม่ได้ใช้งานแล้วเนื่องจากเปลี่ยนไปใช้ Linear schedule with Warmup)
 XLMR_LR_SCHEDULER_PATIENCE = 1         # ตัวแปรเสริม (ไม่ได้ใช้งานแล้วเนื่องจากเปลี่ยนไปใช้ Linear schedule with Warmup)
-
-# ==============================================================================
-# 12.5 พารามิเตอร์สำหรับ WangchanBERTa (THAI-SPECIFIC ORDINAL REGRESSOR)
-# ==============================================================================
-WANGCHAN_MODEL_NAME = "airesearch/wangchanberta-base-att-spm-uncased"
-WANGCHAN_EPOCHS = 4
-WANGCHAN_LEARNING_RATE = 3e-5
-WANGCHAN_BATCH_SIZE = 8
-WANGCHAN_GRAD_ACCUM_STEPS = 1
 
 # ==============================================================================
 # 13. การประเมินและการทำนายผลตรวจจับความผิดปกติ (SCORING SETTINGS)
@@ -267,12 +275,10 @@ if _os.environ.get("RRIS_SMOKE") == "1":
         TORCH_DEVICE = "cpu"
         XGB_DEVICE = "cpu"
     EPOCHS = 1
-    WANGCHAN_EPOCHS = 1
     XLMR_EARLY_STOPPING_PATIENCE = 1
     XLMR_USE_AMP = False
     XLMR_GRADIENT_CHECKPOINTING = False
     BATCH_SIZE = max(4, BATCH_SIZE)
-    WANGCHAN_BATCH_SIZE = max(4, WANGCHAN_BATCH_SIZE)
     EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     EMBEDDING_BATCH_SIZE = 32
     BASELINE_OVERSAMPLE_LOW_STARS = False

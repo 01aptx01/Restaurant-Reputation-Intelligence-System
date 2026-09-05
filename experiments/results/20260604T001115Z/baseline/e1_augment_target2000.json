@@ -1,0 +1,38 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "e1_augment_target2000",
+  "hypothesis": "Heavy augmentation: target 2000 samples per minority class.",
+  "model": "baseline",
+  "config_overrides": {
+    "AUGMENT_ENABLED": true,
+    "AUGMENT_TARGET_COUNT": 2000,
+    "AUGMENT_TARGET_STARS": [
+      1,
+      2,
+      3
+    ]
+  },
+  "metrics": {
+    "mae": 0.6898313832116274,
+    "accuracy": 0.4071637426900585,
+    "f1_macro": 0.21946070822094618,
+    "f1_weighted": 0.31183890539773357,
+    "rmse": 0.8689223953410071,
+    "off_by_one_accuracy": 0.9371345029239766,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.09836065573770492,
+    "anomaly_rate": 0.029970760233918127,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.47674418604651164,
+    "anomaly_f1": 0.6456692913385826,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.09836065573770492,
+      "3": 0.1821705426356589,
+      "4": 0.9331983805668016,
+      "5": 0.09090909090909091
+    }
+  },
+  "status": "ok",
+  "duration": 178.0
+}

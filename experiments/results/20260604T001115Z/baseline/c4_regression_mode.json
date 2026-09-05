@@ -1,0 +1,13 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "c4_regression_mode",
+  "hypothesis": "Ordinal regression may improve MAE by learning star ordering.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_USE_REGRESSION": true,
+    "XGB_USE_SAMPLE_WEIGHT": false
+  },
+  "status": "error",
+  "error": "operands could not be broadcast together with shapes (1368,) (1368,5) ",
+  "duration": 77.1
+}

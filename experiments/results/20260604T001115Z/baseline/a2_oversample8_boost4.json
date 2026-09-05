@@ -1,0 +1,33 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "a2_oversample8_boost4",
+  "hypothesis": "Aggressive oversampling + high boost for extreme low-star recall.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_OVERSAMPLE_FACTOR": 8,
+    "XGB_LOW_STAR_BOOST": 4.0
+  },
+  "metrics": {
+    "mae": 0.68832431531425,
+    "accuracy": 0.4071637426900585,
+    "f1_macro": 0.22646596484862344,
+    "f1_weighted": 0.319052595928474,
+    "rmse": 0.8649930218704905,
+    "off_by_one_accuracy": 0.9378654970760234,
+    "recall_star_1": 0.010752688172043012,
+    "recall_star_2": 0.11475409836065574,
+    "anomaly_rate": 0.029970760233918127,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.4823529411764706,
+    "anomaly_f1": 0.6507936507936508,
+    "per_class_recall": {
+      "1": 0.010752688172043012,
+      "2": 0.11475409836065574,
+      "3": 0.18604651162790697,
+      "4": 0.9149797570850202,
+      "5": 0.10606060606060606
+    }
+  },
+  "status": "ok",
+  "duration": 153.2
+}

@@ -1,0 +1,32 @@
+{
+  "manifest": "embedding_sweep.yaml",
+  "variant": "b2_preprocess_minimal",
+  "hypothesis": "Minimal preprocessing preserves raw text structure.",
+  "model": "embedding",
+  "config_overrides": {
+    "XLMR_PREPROCESS_STRATEGY": "minimal"
+  },
+  "metrics": {
+    "mae": 0.5792483687400818,
+    "accuracy": 0.5168128654970761,
+    "f1_macro": 0.49407408962994614,
+    "f1_weighted": 0.49159576568241564,
+    "rmse": 0.741308273739495,
+    "off_by_one_accuracy": 0.9619883040935673,
+    "recall_star_1": 0.6774193548387096,
+    "recall_star_2": 0.36065573770491804,
+    "anomaly_rate": 0.012426900584795321,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.3269230769230769,
+    "anomaly_f1": 0.4927536231884058,
+    "per_class_recall": {
+      "1": 0.6774193548387096,
+      "2": 0.36065573770491804,
+      "3": 0.3023255813953488,
+      "4": 0.8319838056680162,
+      "5": 0.2878787878787879
+    }
+  },
+  "status": "ok",
+  "duration": 413.2
+}

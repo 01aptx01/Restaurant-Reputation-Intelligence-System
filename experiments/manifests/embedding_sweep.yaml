@@ -1,0 +1,143 @@
+# experiments/manifests/embedding_sweep.yaml
+# ==============================================================================
+# Sentence Embedding (E5/BGE-M3) + Classifier: Strategy Sweep
+# ==============================================================================
+# ทดลองปรับ embedding model, classifier, preprocessing, finetune
+# เพื่อหา config ที่ให้ MAE ต่ำสุดบน holdout
+model: embedding
+
+variants:
+  # ---------- Variant 0: Current Production Config ----------
+  - name: v0_current_production
+    hypothesis: "Reproduce current config.py settings as baseline reference."
+    config: {}
+
+  # ===================== A. EMBEDDING MODEL VARIANTS =====================
+
+  - name: a1_e5_base
+    hypothesis: "multilingual-e5-base — current default, balanced speed/quality."
+    config:
+      EMBEDDING_MODEL_NAME: "intfloat/multilingual-e5-base"
+
+  - name: a2_e5_large
+    hypothesis: "multilingual-e5-large — more parameters may capture finer semantics."
+    config:
+      EMBEDDING_MODEL_NAME: "intfloat/multilingual-e5-large"
+
+  - name: a3_bge_m3
+    hypothesis: "BGE-M3 — multi-granularity embedding often excels on Asian languages."
+    config:
+      EMBEDDING_MODEL_NAME: "BAAI/bge-m3"
+
+  - name: a4_minilm
+    hypothesis: "MiniLM — lightweight, fast, but may sacrifice quality."
+    config:
+      EMBEDDING_MODEL_NAME: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+  - name: a5_mpnet
+    hypothesis: "MPNet multilingual — strong balance between quality and speed."
+    config:
+      EMBEDDING_MODEL_NAME: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+
+  # ===================== B. PREPROCESSING STRATEGIES =====================
+
+  - name: b1_preprocess_default
+    hypothesis: "Default preprocessing for embeddings."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "default"
+
+  - name: b2_preprocess_minimal
+    hypothesis: "Minimal preprocessing preserves raw text structure."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "minimal"
+
+  - name: b3_preprocess_aggressive
+    hypothesis: "Aggressive cleaning removes noise for cleaner embeddings."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "aggressive"
+
+  - name: b4_preprocess_keep_digits
+    hypothesis: "Keeping digits may help with price/quantity context."
+    config:
+      XLMR_PREPROCESS_STRATEGY: "keep_digits"
+
+  # ===================== C. CLASSIFIER HEAD VARIANTS =====================
+
+  - name: c1_clf_xgb_deep
+    hypothesis: "XGBoost with deeper trees for complex feature interactions."
+    config:
+      EMBEDDING_CLF_TYPE: "xgb"
+      XGB_PARAMS:
+        max_depth: 6
+        eta: 0.05
+
+  - name: c2_clf_lr
+    hypothesis: "Logistic Regression — simple, interpretable, less overfit risk."
+    config:
+      EMBEDDING_CLF_TYPE: "lr"
+      EMBEDDING_LR_MAX_ITER: 2000
+
+  - name: c3_clf_svm
+    hypothesis: "Linear SVM — maximizes margin, strong for high-dimensional embedding vectors."
+    config:
+      EMBEDDING_CLF_TYPE: "svm"
+
+  - name: c4_clf_rf
+    hypothesis: "Random Forest — robust ensemble method, less prone to overfitting."
+    config:
+      EMBEDDING_CLF_TYPE: "rf"
+
+  # ===================== D. CLASS BALANCE STRATEGIES =====================
+
+  - name: d1_boost_5
+    hypothesis: "Very high low-star boost (5.0) for embedding-based models."
+    config:
+      XGB_LOW_STAR_BOOST: 5.0
+
+  - name: d2_boost_1
+    hypothesis: "No boost — let the embedding's semantic quality handle imbalance."
+    config:
+      XGB_LOW_STAR_BOOST: 1.0
+
+  - name: d3_no_sample_weight
+    hypothesis: "Ablation: no sample weighting at all."
+    config:
+      XGB_USE_SAMPLE_WEIGHT: false
+      XGB_LOW_STAR_BOOST: 1.0
+
+  # ===================== E. FINETUNE OPTIONS =====================
+
+  - name: e1_finetune_supervised
+    hypothesis: "Fine-tune embedding model with supervised loss before classifier."
+    config:
+      EMBEDDING_FINETUNE: true
+      EMBEDDING_FINETUNE_MODE: "supervised"
+      EMBEDDING_FINETUNE_EPOCHS: 2
+
+  - name: e2_finetune_contrastive
+    hypothesis: "Contrastive fine-tuning learns better star separation in embedding space."
+    config:
+      EMBEDDING_FINETUNE: true
+      EMBEDDING_FINETUNE_MODE: "contrastive"
+      EMBEDDING_FINETUNE_EPOCHS: 3
+
+  # ===================== F. BEST COMBINATIONS =====================
+
+  - name: f1_best_combo_bge_aggressive
+    hypothesis: "BGE-M3 + aggressive preprocess + high boost + deep XGB."
+    config:
+      EMBEDDING_MODEL_NAME: "BAAI/bge-m3"
+      XLMR_PREPROCESS_STRATEGY: "aggressive"
+      XGB_LOW_STAR_BOOST: 3.0
+      XGB_PARAMS:
+        max_depth: 5
+        eta: 0.03
+
+  - name: f2_best_combo_e5_finetune
+    hypothesis: "E5-base + supervised finetune + balanced weights."
+    config:
+      EMBEDDING_MODEL_NAME: "intfloat/multilingual-e5-base"
+      EMBEDDING_FINETUNE: true
+      EMBEDDING_FINETUNE_MODE: "supervised"
+      EMBEDDING_FINETUNE_EPOCHS: 2
+      XGB_LOW_STAR_BOOST: 2.5

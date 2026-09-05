@@ -1,0 +1,33 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "a3_undersample4_50",
+  "hypothesis": "Aggressive undersampling of dominant 4-star class (keep 50%).",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_UNDERSAMPLE_STAR4_FRACTION": 0.5,
+    "BASELINE_OVERSAMPLE_FACTOR": 3
+  },
+  "metrics": {
+    "mae": 0.6926333404838512,
+    "accuracy": 0.40350877192982454,
+    "f1_macro": 0.21283023262155892,
+    "f1_weighted": 0.31127238457058065,
+    "rmse": 0.8706377388007304,
+    "off_by_one_accuracy": 0.9364035087719298,
+    "recall_star_1": 0.0,
+    "recall_star_2": 0.08196721311475409,
+    "anomaly_rate": 0.029239766081871343,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.45977011494252873,
+    "anomaly_f1": 0.6299212598425197,
+    "per_class_recall": {
+      "1": 0.0,
+      "2": 0.08196721311475409,
+      "3": 0.18992248062015504,
+      "4": 0.9190283400809717,
+      "5": 0.09523809523809523
+    }
+  },
+  "status": "ok",
+  "duration": 142.1
+}

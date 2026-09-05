@@ -1,0 +1,35 @@
+{
+  "manifest": "baseline_sweep.yaml",
+  "variant": "b4_lsa_500_no_char",
+  "hypothesis": "Large LSA without char TF-IDF — cleaner embedding-like features.",
+  "model": "baseline",
+  "config_overrides": {
+    "BASELINE_USE_LSA": true,
+    "LSA_N_COMPONENTS": 500,
+    "BASELINE_USE_CHAR_TFIDF": false,
+    "TFIDF_MAX_FEATURES": 10000
+  },
+  "metrics": {
+    "mae": 0.6756995224686599,
+    "accuracy": 0.4159356725146199,
+    "f1_macro": 0.2519202351103248,
+    "f1_weighted": 0.32228690565846174,
+    "rmse": 0.851249707963335,
+    "off_by_one_accuracy": 0.9422514619883041,
+    "recall_star_1": 0.06451612903225806,
+    "recall_star_2": 0.16393442622950818,
+    "anomaly_rate": 0.02850877192982456,
+    "anomaly_precision": 1.0,
+    "anomaly_recall": 0.4936708860759494,
+    "anomaly_f1": 0.6610169491525424,
+    "per_class_recall": {
+      "1": 0.06451612903225806,
+      "2": 0.16393442622950818,
+      "3": 0.1937984496124031,
+      "4": 0.9412955465587044,
+      "5": 0.08225108225108226
+    }
+  },
+  "status": "ok",
+  "duration": 70.4
+}

@@ -1,0 +1,187 @@
+# experiments/manifests/xlmr_large_sweep.yaml
+# ==============================================================================
+# XLM-RoBERTa Large: Comprehensive Tuning Sweep
+# ==============================================================================
+# การทดลองแบบกวาดพารามิเตอร์ (Grid Sweep) สำหรับ XLM-R Large โมเดลที่มีความซับซ้อนสูง
+# ครอบคลุมสมมติฐานทั้งหมดที่ส่งผลต่อประสิทธิภาพและการจัดการ VRAM
+model: xlmr
+
+variants:
+  # ===================== A. LEARNING RATE SENSITIVITY =====================
+  # หา Sweet Spot ของ LR เพราะโมเดล Large มักเกิดปัญหา Catastrophic Forgetting ได้ง่ายถ้า LR สูงไป
+  - name: a1_lr_5e6
+    hypothesis: "Very conservative LR (5e-6) prevents catastrophic forgetting in deep layers."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.000005
+      
+  - name: a2_lr_1e5
+    hypothesis: "Standard LR (1e-5) for Large models."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      
+  - name: a3_lr_2e5
+    hypothesis: "Aggressive LR (2e-5) may converge faster if gradient clipping holds."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00002
+
+  # ===================== B. LOSS FUNCTIONS & ARCHITECTURE =====================
+  # ทดสอบการใช้งาน Regression กับ Focal Loss
+  - name: b1_focal_loss
+    hypothesis: "Focal loss (gamma 2.0) helps the large model focus on edge-case reviews."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      XLMR_USE_FOCAL_LOSS: true
+      XLMR_USE_REGRESSION: false
+      
+  - name: b2_regression
+    hypothesis: "Ordinal regression preserves star ordering and strictly optimizes MAE."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      XLMR_USE_REGRESSION: true
+      XLMR_USE_FOCAL_LOSS: false
+
+  # ===================== C. CONTEXT LENGTH =====================
+  # ทดสอบความยาวประโยคสูงสุด
+  - name: c1_context_128
+    hypothesis: "Context 128 (baseline) is a good speed/context tradeoff."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      MAX_LENGTH: 128
+      
+  - name: c2_context_256
+    hypothesis: "Context 256 captures full nuances but requires smaller batch to avoid OOM."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      LEARNING_RATE: 0.00001
+      MAX_LENGTH: 256
+      BATCH_SIZE: 2
+      XLMR_GRAD_ACCUM_STEPS: 8  # 2 * 8 = 16 effective batch size
+      XLMR_GRADIENT_CHECKPOINTING: true
+
+  # ===================== D. PREPROCESSING STRATEGY =====================
+  # การล้างข้อความ
+  - name: d1_prep_keep_digits
+    hypothesis: "Retaining digits helps the model understand queue times, prices, and food portions."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      XLMR_PREPROCESS_STRATEGY: "keep_digits"
+
+  # ===================== E. DATA AUGMENTATION =====================
+  # สร้างข้อความเพิ่มเพื่อช่วยชั้นดาวน้อย
+  - name: e1_augment_minority
+    hypothesis: "Augmenting minority classes (1,2,3 stars) via synonym replacement prevents bias."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      AUGMENT_ENABLED: true
+      AUGMENT_TARGET_STARS: [1, 2, 3]
+      AUGMENT_TARGET_COUNT: 800
+
+  - name: e2_augment_error_driven
+    hypothesis: "Augment based on severe delta > 2 from previous runs."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      AUGMENT_FROM_ERRORS: true
+
+  # ===================== F. FREEZING LAYERS (FINE-TUNING STABILITY) =====================
+  # แช่แข็ง Layer ป้องกันความรู้เดิมของโมเดลถูกทำลาย
+  - name: f1_freeze_embeddings
+    hypothesis: "Freezing embeddings saves memory and speeds up backward passes without losing much context."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 4
+      XLMR_GRAD_ACCUM_STEPS: 4
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      XLMR_FREEZE_EMBEDDINGS: true
+
+  - name: f2_freeze_bottom_layers
+    hypothesis: "Freezing the first 12 layers allows tuning only the top 12 layers, drastically cutting VRAM and compute."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      BATCH_SIZE: 8         # แช่ 12 layers ทำให้ VRAM เหลือเฟือ สามารถอัดแบทช์กลับมา 8 ได้
+      XLMR_GRAD_ACCUM_STEPS: 2
+      XLMR_GRADIENT_CHECKPOINTING: true
+      LEARNING_RATE: 0.00001
+      XLMR_FREEZE_LAYERS: 12
+
+  # ===================== G. BEST COMBINATION (CHAMPION CANDIDATE) =====================
+  - name: g1_champion_candidate
+    hypothesis: "Combine Regression, Keep Digits, LR 1e-5, and Context 192 for the ultimate MAE champion."
+    config:
+      XLMR_MODEL_NAME: "xlm-roberta-large"
+      XLMR_ARTIFACTS_DIR: "artifacts/xlmr_large"
+      XLMR_META_PATH: "artifacts/xlmr_large/xlmr_meta.json"
+      XLMR_GRADIENT_CHECKPOINTING: true
+      
+      # Architecture
+      XLMR_USE_REGRESSION: true
+      XLMR_PREPROCESS_STRATEGY: "keep_digits"
+      
+      # Resource scaling
+      LEARNING_RATE: 0.00001
+      MAX_LENGTH: 192
+      BATCH_SIZE: 2
+      XLMR_GRAD_ACCUM_STEPS: 8
+      
+      # Optimization
+      XLMR_FREEZE_EMBEDDINGS: true
